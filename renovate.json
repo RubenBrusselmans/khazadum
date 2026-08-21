@@ -1,0 +1,51 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "timezone": "Europe/Brussels",
+  "schedule": ["before 6am"],
+  "ignorePaths": ["clusters/khazadum/flux-system/**"],
+  "automergeStrategy": "squash",
+  "prHourlyLimit": 10,
+  "kubernetes": {
+    "managerFilePatterns": [
+      "/^apps/.+\\.ya?ml$/",
+      "/^infrastructure/.+\\.ya?ml$/"
+    ]
+  },
+  "flux": {
+    "managerFilePatterns": ["/^infrastructure/observability/.+\\.ya?ml$/"]
+  },
+  "packageRules": [
+    {
+      "description": "Digest updates: automerge with PR, ignoreTests because there is no CI (yet).",
+      "matchUpdateTypes": ["digest"],
+      "groupName": "image digests",
+      "automerge": true,
+      "automergeType": "pr",
+      "ignoreTests": true
+    },
+    {
+      "description": "Patches and minor updates: automerge with PR.",
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "ignoreTests": true
+    },
+    {
+      "description": "Major updates: PR with manual merge.",
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "Nextcloud 34 MariaDB <= 11.8 (https://docs.nextcloud.com/server/stable/admin_manual/installation/system_requirements.html).",
+      "matchPackageNames": ["docker.io/library/mariadb"],
+      "allowedVersions": "/^11\\./"
+    },
+    {
+      "description": "Alerting (matrix-receiver) should be PR with manual merge.",
+      "matchPackageNames": ["docker.io/metio/matrix-alertmanager-receiver"],
+      "automerge": false,
+      "matchUpdateTypes": ["digest", "patch", "minor", "major"]
+    }
+  ]
+}

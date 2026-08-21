@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - homepage.yaml
+  - openwebui.yaml
+  - hermes.yaml
+  - unifi.yaml
+  - gundabad.yaml
+  - jellyfin.yaml
+  - nextcloud.yaml

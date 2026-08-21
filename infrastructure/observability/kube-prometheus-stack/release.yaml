@@ -1,0 +1,231 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: observability
+spec:
+  interval: 10m
+  timeout: 10m
+  chartRef:
+    kind: OCIRepository
+    name: kube-prometheus-stack
+  values:
+    prometheus:
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        hosts:
+          - prometheus.khazadum.net
+      # the service monitor for device-metrics-exporter is declared here
+      # and not in a device-metrics-exporter manifest because this chart
+      # installs the ServiceMonitor CRD and must be applied first,
+      # otherwise the service monitor for device-metrics-exporter gets
+      # applied before the CRD (because of the flux apply order)
+      additionalServiceMonitors:
+        - name: device-metrics-exporter
+          selector:
+            matchLabels:
+              app: device-metrics-exporter
+          endpoints:
+            - port: metrics
+              interval: 30s
+              honorLabels: true
+      prometheusSpec:
+        retention: 15d
+        retentionSize: 15GB
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: local-path
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 20Gi
+        resources:
+          requests: { cpu: 200m, memory: 1Gi }
+          limits: { memory: 2Gi }
+
+    alertmanager:
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        hosts:
+          - alertmanager.khazadum.net
+      alertmanagerSpec:
+        storage:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: local-path
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 5Gi
+        resources:
+          requests: { cpu: 50m, memory: 64Mi }
+          limits: { memory: 128Mi }
+      # route alerts to matrix-receiver
+      config:
+        global:
+          resolve_timeout: 5m
+        route:
+          group_by: ["alertname", "namespace"]
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 12h
+          receiver: matrix
+          routes:
+            - receiver: matrix
+        receivers:
+          - name: matrix
+            webhook_configs:
+              # matrix-receiver maps khazadum to the room-id
+              - url: "http://matrix-receiver.observability.svc.cluster.local:8080/alerts/khazadum"
+                send_resolved: true
+
+    # keep chart defaults
+    prometheusOperator: {}
+
+    kube-state-metrics:
+      resources:
+        requests: { cpu: 50m, memory: 128Mi }
+        limits: { memory: 256Mi }
+
+    prometheus-node-exporter:
+      resources:
+        requests: { cpu: 25m, memory: 32Mi }
+        limits: { memory: 64Mi }
+
+    grafana:
+      admin:
+        existingSecret: grafana
+        userKey: GF_SECURITY_ADMIN_USER
+        passwordKey: GF_SECURITY_ADMIN_PASSWORD
+      ingress:
+        enabled: true
+        ingressClassName: traefik
+        hosts:
+          - grafana.khazadum.net
+      persistence:
+        enabled: true
+        storageClassName: local-path
+        size: 5Gi
+      resources:
+        requests: { cpu: 100m, memory: 256Mi }
+        limits: { memory: 1Gi }
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: Prometheus
+              type: prometheus
+              access: proxy
+              url: http://prometheus-operated.observability.svc.cluster.local:9090
+              isDefault: true
+            - name: Loki
+              type: loki
+              access: proxy
+              # requires loki.auth_enabled: false (see loki/release.yaml)
+              url: http://loki.observability.svc.cluster.local:3100
+      # the chart also tries to deploy a default datasource
+      # but we have already defined our own above
+      sidecar:
+        datasources:
+          defaultDatasourceEnabled: false
+      dashboardProviders:
+        dashboardproviders.yaml:
+          apiVersion: 1
+          providers:
+            - name: default
+              orgId: 1
+              folder: ""
+              type: file
+              disableDeletion: false
+              editable: true
+              options:
+                path: /var/lib/grafana/dashboards/default
+      dashboards:
+        default:
+          node-exporter-full:
+            gnetId: 1860
+            revision: 37
+            datasource: Prometheus
+
+    # k3s bundles all of these components into a single binary
+    # so they don't have exposed metrics endpoints
+    kubeControllerManager:
+      enabled: false
+    kubeScheduler:
+      enabled: false
+    kubeEtcd:
+      enabled: false
+    kubeProxy:
+      enabled: false
+
+    # TO DO: fix IPv6 shenanigans properly, this is a dirty solution
+    # kubelet is not reachable over the IPv6 from pods, but it gets 
+    # listed anyway. The real fix is probably pinning the node ip
+    # through k3s config (--node-ip 192.168.10.2) to stop it from
+    # advertising an unusable IPv6 addr
+    kubelet:
+      serviceMonitor:
+        relabelings:
+          - sourceLabels: [__metrics_path__]
+            targetLabel: metrics_path
+          - sourceLabels: [__address__]
+            regex: '192\.168\..*:.*'
+            action: keep
+        cAdvisorRelabelings:
+          - sourceLabels: [__metrics_path__]
+            targetLabel: metrics_path
+          - sourceLabels: [__address__]
+            regex: '192\.168\..*:.*'
+            action: keep
+        probesRelabelings:
+          - sourceLabels: [__metrics_path__]
+            targetLabel: metrics_path
+          - sourceLabels: [__address__]
+            regex: '192\.168\..*:.*'
+            action: keep
+
+    # alert rules
+    defaultRules:
+      create: true
+      rules:
+        alertmanager: true
+        etcd: false
+        configReloaders: true
+        general: true
+        k8sContainerCpuResourceRequests: true
+        k8sContainerMemoryResourceRequests: true
+        k8sPodCrashLooping: true
+        k8sPodNotReady: true
+        kubeApiserverAvailability: true
+        kubePrometheusGeneral: true
+        kubePrometheusNodeRecording: true
+        kubernetesApps: true
+        kubernetesResources: true
+        kubernetesStorage: true
+        kubernetesSystem: true
+        kubeSchedulerAlerting: false
+        kubeSchedulerRecording: false
+        network: true
+        node: true
+        nodeExporterAlerting: true
+        nodeExporterRecording: true
+        prometheus: true
+        prometheusOperator: true
+
+    additionalPrometheusRulesMap:
+      # custom alert for backup cronjob failure
+      backup:
+        groups:
+          - name: backup
+            rules:
+              - alert: BackupJobFailed
+                expr: kube_job_status_failed{namespace="backup", job_name=~"backup.*"} > 0
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "Nightly backup job failed"
+                  description: "The backup CronJob has at least one failed job. Check `kubectl -n backup get jobs` and the rclone sidecar logs (`-c rclone`)."

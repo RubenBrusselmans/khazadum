@@ -1,0 +1,7 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# kube-prometheus-stack and loki are OCIRepositories
+# because those can be easily digest-pinned
+# alloy doesn't have an OCI repository yet
+resources:
+  - grafana.yaml

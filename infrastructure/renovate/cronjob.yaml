@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate
+  namespace: renovate
+spec:
+  schedule: "0 */2 * * *" # every 2h
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 300
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 3600
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: renovate
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: renovate
+              image: docker.io/renovate/renovate:44.36.0@sha256:d53493d70e14c3b50e38653ba02e385d8198e79996f05f3f1b53383671122767
+              env:
+                - name: RENOVATE_CONFIG_FILE
+                  value: /opt/renovate/config.js
+                - name: RENOVATE_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: renovate
+                      key: RENOVATE_TOKEN
+                - name: LOG_LEVEL
+                  value: info
+              volumeMounts:
+                - name: config
+                  mountPath: /opt/renovate/config.js
+                  subPath: config.js
+                  readOnly: true
+          volumes:
+            - name: config
+              configMap:
+                name: renovate-config

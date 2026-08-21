@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: git
+  namespace: git
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: git
+  template:
+    metadata:
+      labels:
+        app: git
+    spec:
+      containers:
+      - name: git
+        image: codeberg.org/forgejo/forgejo:16.0.3@sha256:7c4e1db440be7b2ca685b49d0d7864cdd78e92431f531bf7893659def8200fc5
+        ports:
+        - containerPort: 3000
+        env:
+        - name: FORGEJO__server__DOMAIN
+          value: "git.khazadum.net"
+        - name: FORGEJO__server__ROOT_URL
+          value: "http://git.khazadum.net/"
+        - name: FORGEJO__server__START_SSH_SERVER
+          value: "false"
+        volumeMounts:
+        - name: git-data
+          mountPath: /data
+      volumes:
+      - name: git-data
+        hostPath:
+          path: /data/crypt/git
+          type: DirectoryOrCreate

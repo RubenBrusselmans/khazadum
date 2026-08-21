@@ -1,0 +1,91 @@
+# for manual restic stuff (inspect, restore, forget, check)
+# not in kustomization.yaml / outside flux on purpose
+apiVersion: v1
+kind: Pod
+metadata:
+  name: restore
+  namespace: backup
+  labels:
+    app: backup
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: tower
+  initContainers:
+    - name: seed-config
+      image: docker.io/rclone/rclone:latest@sha256:b06aed988cf5967de7c25be5925240983981c757f4ed1ac9d2fa659d51d60548
+      command: ["/bin/sh", "-c"]
+      args: ["cp /secret/rclone.conf /config/rclone.conf"]
+      volumeMounts:
+        - name: rclone-secret
+          mountPath: /secret
+          readOnly: true
+        - name: rclone-config
+          mountPath: /config
+  containers:
+    - name: rclone
+      image: docker.io/rclone/rclone:latest@sha256:b06aed988cf5967de7c25be5925240983981c757f4ed1ac9d2fa659d51d60548
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          exec rclone serve restic \
+            --config /config/rclone.conf \
+            --addr 127.0.0.1:8080 \
+            --user "$RC_USER" --pass "$RC_PASS" \
+            --low-level-retries 20 \
+            --protondrive-replace-existing-draft=true \
+            proton:restic
+      env:
+        - name: RC_USER
+          valueFrom:
+            secretKeyRef:
+              name: backup
+              key: RC_USER
+        - name: RC_PASS
+          valueFrom:
+            secretKeyRef:
+              name: backup
+              key: RC_PASS
+      volumeMounts:
+        - name: rclone-config
+          mountPath: /config
+    - name: restic
+      image: ghcr.io/restic/restic:latest@sha256:2f0373803493361f9304a57150d464677f69a9dad487afec202105aafb2592f2
+      command: ["/bin/sh", "-c"]
+      args: ["sleep infinity"] # don't do anything, this pod is to kubectl exec in
+      env:
+        - name: RC_USER
+          valueFrom:
+            secretKeyRef:
+              name: backup
+              key: RC_USER
+        - name: RC_PASS
+          valueFrom:
+            secretKeyRef:
+              name: backup
+              key: RC_PASS
+        - name: RESTIC_REPOSITORY
+          value: "rest:http://$(RC_USER):$(RC_PASS)@127.0.0.1:8080/"
+        - name: RESTIC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: backup
+              key: RESTIC_PASSWORD
+      volumeMounts:
+        - name: rclone-config
+          mountPath: /config
+        - name: data
+          mountPath: /data
+  volumes:
+    - name: rclone-secret
+      secret:
+        secretName: backup
+        items:
+          - key: rclone.conf
+            path: rclone.conf
+    - name: rclone-config
+      emptyDir: {}
+    - name: data
+      hostPath:
+        path: /data/crypt
+        type: DirectoryOrCreate

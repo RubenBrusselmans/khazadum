@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: device-metrics-exporter
+  namespace: observability
+  labels:
+    # without this label the service monitor doesn't match and
+    # prometheus shows "no active targets"
+    app: device-metrics-exporter
+spec:
+  selector:
+    app: device-metrics-exporter
+  ports:
+    - name: metrics
+      port: 5000
+      targetPort: metrics

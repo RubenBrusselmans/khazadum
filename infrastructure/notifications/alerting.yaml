@@ -1,0 +1,37 @@
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata:
+  name: matrix
+  namespace: flux-system
+spec:
+  type: matrix
+  address: https://matrix.org
+  channel: '!kVxPkanaTGABUzssWB:matrix.org'
+  secretRef:
+    name: matrix-notifier
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: matrix
+  namespace: flux-system
+spec:
+  summary: "khazadum flux"
+  providerRef:
+    name: matrix
+  eventSeverity: error
+  eventSources:
+    - kind: GitRepository
+      name: "*"
+    - kind: Kustomization
+      name: "*"
+    - kind: HelmRepository
+      name: "*"
+    - kind: ImageRepository
+      name: "*"
+    - kind: ImageUpdateAutomation
+      name: "*"
+    # other namespaces:
+    - kind: HelmRelease
+      name: "*"
+      namespace: observability

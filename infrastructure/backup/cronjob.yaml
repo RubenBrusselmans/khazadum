@@ -1,0 +1,152 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup
+  namespace: backup
+spec:
+  schedule: "0 3 * * *" # daily 03:00
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 21600 # max 6h
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: backup
+        spec:
+          restartPolicy: OnFailure
+          initContainers:
+            - name: seed-config
+              image: docker.io/rclone/rclone:latest@sha256:b06aed988cf5967de7c25be5925240983981c757f4ed1ac9d2fa659d51d60548
+              command: ["/bin/sh", "-c"]
+              args:
+                - cp /secret/rclone.conf /config/rclone.conf
+              volumeMounts:
+                - name: rclone-secret
+                  mountPath: /secret
+                  readOnly: true
+                - name: rclone-config
+                  mountPath: /config
+          containers:
+            - name: rclone
+              image: docker.io/rclone/rclone:latest@sha256:b06aed988cf5967de7c25be5925240983981c757f4ed1ac9d2fa659d51d60548
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  rclone serve restic \
+                    --config /config/rclone.conf \
+                    --addr 127.0.0.1:8080 \
+                    --user "$RC_USER" \
+                    --pass "$RC_PASS" \
+                    --low-level-retries 20 \
+                    --protondrive-replace-existing-draft=true \
+                    proton:restic &
+                  serve_pid=$!
+                  # run until the backup container signals completion
+                  # or until serve dies, then exit non-zero so
+                  # the pod restarts and the whole run retries
+                  while [ ! -f /config/done ] && kill -0 "$serve_pid" 2>/dev/null; do
+                    sleep 5
+                  done
+                  if [ -f /config/done ]; then
+                    kill "$serve_pid" 2>/dev/null || true
+                    wait "$serve_pid" 2>/dev/null || true
+                    exit 0
+                  fi
+                  exit 1
+              env:
+                - name: RC_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup
+                      key: RC_USER
+                - name: RC_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup
+                      key: RC_PASS
+              volumeMounts:
+                - name: rclone-config
+                  mountPath: /config
+            - name: restic
+              image: ghcr.io/restic/restic:latest@sha256:2f0373803493361f9304a57150d464677f69a9dad487afec202105aafb2592f2
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  set -eu
+                  rm -f /config/done
+                  # probe for 5 min until rclone Proton login succeeded
+                  i=0
+                  until /usr/bin/restic snapshots >/dev/null 2>&1 || [ "$i" -ge 60 ]; do
+                    i=$((i+1)); sleep 5
+                  done
+                  # initialise the repo on the first run
+                  /usr/bin/restic snapshots >/dev/null 2>&1 || /usr/bin/restic init
+                  # remove stale locks left behind by runs that were killed
+                  # unlock only removes locks older than 30 minutes
+                  /usr/bin/restic unlock
+                  /usr/bin/restic backup /data \
+                    --exclude=/data/backups \
+                    --exclude=/data/media \
+                    --exclude=/data/gaming \
+                    --exclude=/data/k3s/ \
+                    --exclude=/data/nextcloud/mariadb \
+                    --exclude=/data/ai/openwebui/cache \
+                    --exclude=/data/jellyfin/cache \
+                    --exclude=/data/jellyfin/.cache \
+                    --exclude=/data/unifictl/config/data/db \
+                    --exclude=/data/unifictl/config/logs
+                  # by default, restic groups retention by host, and every run
+                  # gets a new random pod hostname, so group by backup path instead
+                  /usr/bin/restic forget \
+                    --group-by paths \
+                    --keep-daily 7 --keep-weekly 4 --keep-monthly 3 \
+                    --prune
+                  # weekly integrity check on Sunday
+                  if [ "$(date +%u)" = "7" ]; then
+                    /usr/bin/restic check --read-data-subset=5%
+                  fi
+                  # signal rclone sidecar to shut down so the pod can complete
+                  touch /config/done
+              env:
+                - name: RC_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup
+                      key: RC_USER
+                - name: RC_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup
+                      key: RC_PASS
+                - name: RESTIC_REPOSITORY
+                  value: "rest:http://$(RC_USER):$(RC_PASS)@127.0.0.1:8080/"
+                - name: RESTIC_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: backup
+                      key: RESTIC_PASSWORD
+              volumeMounts:
+                - name: rclone-config
+                  mountPath: /config
+                - name: data
+                  mountPath: /data
+                  readOnly: true
+          volumes:
+            - name: rclone-secret
+              secret:
+                secretName: backup
+                items:
+                  - key: rclone.conf
+                    path: rclone.conf
+            - name: rclone-config
+              emptyDir: {}
+            - name: data
+              hostPath:
+                path: /data/crypt
+                type: DirectoryOrCreate

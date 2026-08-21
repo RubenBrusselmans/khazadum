@@ -1,0 +1,165 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nextcloud
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+    spec:
+      containers:
+        - name: mariadb
+          image: docker.io/library/mariadb:11.8.8@sha256:24e76fcec8c003a0362d0dd53f4806e7e79458d7fdeaf47437760e19496f5a9c
+          args:
+            - --transaction-isolation=READ-COMMITTED
+            - --log-bin=binlog
+            - --binlog-format=ROW
+            - --binlog-expire-logs-seconds=1209600 # 14d
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              value: "nextcloud"
+            - name: MYSQL_USER
+              value: "nextcloud"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud
+                  key: MYSQL_PASSWORD
+          volumeMounts:
+            - name: mariadb-data
+              mountPath: /var/lib/mysql
+        - name: redis
+          image: docker.io/library/redis:alpine@sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576
+          args:
+            - --appendonly
+            - "yes"
+            - --appendfsync
+            - everysec
+            - --maxmemory
+            - 512mb
+            - --maxmemory-policy
+            - allkeys-lru
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+        - name: nextcloud
+          image: docker.io/library/nextcloud:34.0.3@sha256:368cd1c75bc4a32c2aee8a119cae31bcebff80c374782f404c440c3295726814
+          env:
+            - name: MYSQL_DATABASE
+              value: "nextcloud"
+            - name: MYSQL_USER
+              value: "nextcloud"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_HOST
+              value: "127.0.0.1"
+            - name: REDIS_HOST
+              value: "127.0.0.1"
+            - name: TZ
+              value: "Europe/Brussels"
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            # check if in maintenance mode (in case of failed upgrade)
+            exec:
+              command:
+                - php
+                - -r
+                - '$c = include "/var/www/html/config/config.php"; exit(empty($c["maintenance"]) ? 0 : 1);'
+            periodSeconds: 15
+            failureThreshold: 3
+          volumeMounts:
+            - name: nextcloud-config
+              mountPath: /var/www/html
+            - name: media
+              mountPath: /media
+        - name: cron
+          image: docker.io/library/nextcloud:34.0.3@sha256:368cd1c75bc4a32c2aee8a119cae31bcebff80c374782f404c440c3295726814
+          command: ["/cron.sh"]
+          volumeMounts:
+            - name: nextcloud-config
+              mountPath: /var/www/html
+        - name: db-dump
+          # dump at 02:30 (before the 03:00 backup)
+          # gzip dumps under /data/crypt/nextcloud/dumps
+          image: docker.io/library/mariadb:11.8.8@sha256:24e76fcec8c003a0362d0dd53f4806e7e79458d7fdeaf47437760e19496f5a9c
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -u
+              while :; do
+                # get the current time in seconds
+                now=$(date +%s)
+                # calculate the exact second that 02:30 am occurs today
+                target=$(date -d 'today 02:30' +%s)
+                # if the current time is already past 02:30 am today
+                # change the target to 02:30 am tomorrow instead
+                [ "$now" -lt "$target" ] || target=$(date -d 'tomorrow 02:30' +%s)
+                # sleep until target (today or tomorrow 2:30)
+                sleep "$((target - now))"
+                # get today's date (e.g., 2026-07-25)
+                day=$(date +%F)
+                # create the database backup and compress it using gzip
+                if mariadb-dump --host=127.0.0.1 --user="$MYSQL_USER" --single-transaction --databases nextcloud > /dumps/tmp.sql; then
+                  gzip -c /dumps/tmp.sql > "/dumps/nextcloud-$day.sql.gz.tmp"
+                  mv "/dumps/nextcloud-$day.sql.gz.tmp" "/dumps/nextcloud-$day.sql.gz"
+                  echo "dump ok: nextcloud-$day.sql.gz"
+                else
+                  echo "dump FAILED: $day"
+                fi
+                rm -f /dumps/tmp.sql
+                # keep only the 14 most recent daily backups
+                ls -1t /dumps/nextcloud-*.sql.gz 2>/dev/null | tail -n +15 | xargs -r rm -f
+              done
+          env:
+            - name: TZ
+              value: "Europe/Brussels"
+            - name: MYSQL_USER
+              value: "nextcloud"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: nextcloud
+                  key: MYSQL_PASSWORD
+            - name: MYSQL_PWD
+              value: "$(MYSQL_PASSWORD)"
+          volumeMounts:
+            - name: dumps
+              mountPath: /dumps
+      volumes:
+        - name: mariadb-data
+          hostPath:
+            path: /data/crypt/nextcloud/mariadb
+            type: DirectoryOrCreate
+        - name: redis-data
+          hostPath:
+            path: /data/crypt/nextcloud/redis
+            type: DirectoryOrCreate
+        - name: dumps
+          hostPath:
+            path: /data/crypt/nextcloud/dumps
+            type: DirectoryOrCreate
+        - name: nextcloud-config
+          hostPath:
+            path: /data/crypt/nextcloud/nextcloud
+            type: DirectoryOrCreate
+        - name: media
+          hostPath:
+            path: /data/crypt/media/media
+            type: DirectoryOrCreate

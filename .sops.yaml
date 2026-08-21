@@ -1,0 +1,7 @@
+creation_rules:
+  - path_regex: apps/[^/]+/secret\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1q8tckzykcehegmqafnhptdlakk0wa4vsqp9jyv6qcameuys4t4kqvegl87
+  - path_regex: infrastructure/.*/secret\.yaml$
+    encrypted_regex: ^(data|stringData)$
+    age: age1q8tckzykcehegmqafnhptdlakk0wa4vsqp9jyv6qcameuys4t4kqvegl87

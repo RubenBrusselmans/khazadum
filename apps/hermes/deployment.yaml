@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hermes
+  namespace: hermes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hermes
+  template:
+    metadata:
+      labels:
+        app: hermes
+    spec:
+      containers:
+        - name: hermes
+          image: docker.io/nousresearch/hermes-agent:latest@sha256:e2496da9051d5b3368912c69436cbf8730004a2b9643c70564117f021bc75209
+          args: ["gateway", "run"]
+          ports:
+            - containerPort: 8642
+            - containerPort: 9119
+          env:
+            - name: HERMES_DASHBOARD
+              value: "1"
+          volumeMounts:
+            - name: hermes
+              mountPath: /opt/data
+      volumes:
+        - name: hermes
+          hostPath:
+            path: /data/crypt/hermes
+            type: Directory

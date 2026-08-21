@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: unifi-controller
+  namespace: unifi
+  annotations:
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    traefik.ingress.kubernetes.io/service.serverstransport: unifi-unifi-transport@kubernetescrd
+spec:
+  selector:
+    app: unifi-controller
+  ports:
+    - name: https
+      port: 443
+      targetPort: 443
+---
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: unifi-transport
+  namespace: unifi
+spec:
+  insecureSkipVerify: true

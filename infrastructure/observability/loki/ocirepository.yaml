@@ -1,0 +1,15 @@
+# switched to OCI registry instead of HTTP for easy digest pinning
+# renovate updates tag & digest through flux manager
+# https://docs.renovatebot.com/modules/manager/flux/
+# the chart digest is pinned, not the images
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: loki
+  namespace: observability
+spec:
+  interval: 10m
+  url: oci://ghcr.io/grafana/helm-charts/loki
+  ref:
+    tag: 7.3.0
+    digest: sha256:ba8b6b3ee954c9d6eeee713d148a22e6f73eb440189e11acd3112a06acdfd2f8

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: device-metrics-exporter
+  namespace: observability
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: device-metrics-exporter
+  template:
+    metadata:
+      labels:
+        app: device-metrics-exporter
+    spec:
+      hostname: device-metrics-exporter
+      containers:
+        - name: device-metrics-exporter
+          image: docker.io/rocm/device-metrics-exporter:v1.5.1@sha256:cbef5772c435d648ebd6de705517c4978efdb4b5650952c6797cc2bf15af747a
+          args:
+            - -monitor-gpu
+          ports:
+            - name: metrics
+              containerPort: 5000
+          volumeMounts:
+            - name: sys
+              mountPath: /sys
+              readOnly: true
+            - name: dri
+              mountPath: /dev/dri
+            - name: kfd
+              mountPath: /dev/kfd
+          securityContext:
+            privileged: true
+          resources:
+            requests: {cpu: 25m, memory: 32Mi}
+            limits: {memory: 128Mi}
+      volumes:
+        - name: sys
+          hostPath:
+            path: /sys
+            type: Directory
+        - name: dri
+          hostPath:
+            path: /dev/dri
+            type: Directory
+        - name: kfd
+          hostPath:
+            path: /dev/kfd
+            type: CharDevice

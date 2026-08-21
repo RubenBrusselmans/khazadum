@@ -1,0 +1,67 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: loki
+  namespace: observability
+spec:
+  interval: 10m
+  timeout: 10m
+  chartRef:
+    kind: OCIRepository
+    name: loki
+  values:
+    # single-binary mode is the recommended mode for single-node / small deployments
+    # the chart default sets backend/read/write replicas to 3 (SimpleScalable mode)
+    # so they must be explicitly set to 0 to pass the deployment validation
+    deploymentMode: SingleBinary
+
+    backend:
+      replicas: 0
+    read:
+      replicas: 0
+    write:
+      replicas: 0
+
+    loki:
+      commonConfig:
+        # there are no other nodes to replicate to, so must be 1
+        replication_factor: 1
+      # disable multi-tenant auth so queries don't require X-Scope-OrgID header
+      # otherwise grafana datasource health check will fail with 401 no org id
+      auth_enabled: false
+      # save logs to the local hard drive using test schema
+      useTestSchema: true
+      storage:
+        # filesystem = local disk via PVC
+        type: filesystem
+      limits_config:
+        retention_period: 336h # 14 days
+        max_query_series: 5000
+      compactor:
+        retention_enabled: true
+        delete_request_store: filesystem
+
+    singleBinary:
+      replicas: 1
+      persistence:
+        enabled: true
+        storageClassName: local-path
+        size: 10Gi
+      resources:
+        requests: { cpu: 100m, memory: 256Mi }
+        limits: { memory: 1Gi }
+
+    # no gateway (nginx proxy used for load-balancing in microservices mode)
+    gateway:
+      enabled: false
+
+    # skip self-monitoring, test pods, and extra dashboards
+    monitoring:
+      selfMonitoring:
+        enabled: false
+        grafanaAgent:
+          installOperator: false
+    test:
+      enabled: false
+    lokiCanary:
+      enabled: false

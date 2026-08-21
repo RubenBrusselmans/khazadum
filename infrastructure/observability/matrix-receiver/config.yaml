@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: matrix-receiver-config
+  namespace: observability
+data:
+  config.yaml: |
+    http:
+      address: 0.0.0.0
+      port: 8080
+      alerts-path-prefix: /alerts
+      metrics-path: /metrics
+      metrics-enabled: true
+
+    matrix:
+      homeserver-url: https://matrix.org
+      user-id: "${MATRIX_USER_ID}"
+      access-token: "${MATRIX_ACCESS_TOKEN}"
+      room-mapping:
+        khazadum: "${MATRIX_ROOM_ID}"
+
+    templating:
+      # rewrite the internal url to the external url
+      external-url-mapping:
+        "http://alertmanager-operated.observability.svc.cluster.local:9093": https://alertmanager.khazadum.net
+      generator-url-mapping:
+        "http://prometheus-operated.observability.svc.cluster.local:9090": https://prometheus.khazadum.net
+
+      firing-template: |
+        <p>
+          <strong><font color="{{ if eq .Alert.Labels.severity "critical" }}red{{ else if eq .Alert.Labels.severity "warning" }}orange{{ else }}yellow{{ end }}">{{ .Alert.Status | ToUpper }}</font></strong>
+          - {{ if .Alert.Labels.alertname }}{{ .Alert.Labels.alertname }}{{ end }}
+          <br/><small>{{ if .Alert.Annotations.summary }}{{ .Alert.Annotations.summary }}{{ else if .Alert.Annotations.description }}{{ .Alert.Annotations.description }}{{ end }}</small>
+          <br/><small>ns={{ if .Alert.Labels.namespace }}{{ .Alert.Labels.namespace }}{{ else }}-{{ end }} · severity={{ if .Alert.Labels.severity }}{{ .Alert.Labels.severity }}{{ else }}-{{ end }}</small>
+          <br/><a href="{{ .SilenceURL }}">Silence</a>
+        </p>
+
+      resolved-template: |
+        <p><strong><font color="green">RESOLVED</font></strong> - {{ if .Alert.Labels.alertname }}{{ .Alert.Labels.alertname }}{{ end }}</p>

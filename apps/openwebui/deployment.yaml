@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openwebui
+  namespace: openwebui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openwebui
+  template:
+    metadata:
+      labels:
+        app: openwebui
+    spec:
+      containers:
+      - name: openwebui
+        image: ghcr.io/open-webui/open-webui:main@sha256:6a773e5c3a246b65cbe74ce942b294292c0e5f81c138f703d111bc162f7d7c3d
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ENABLE_ADMIN_CHAT_ACCESS
+          value: "false"
+        volumeMounts:
+        - name: openwebui-data
+          mountPath: /app/backend/data
+      volumes:
+      - name: openwebui-data
+        hostPath:
+          path: /data/crypt/ai/openwebui
+          type: Directory

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matrix-receiver
+  namespace: observability
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: matrix-receiver
+  template:
+    metadata:
+      labels:
+        app: matrix-receiver
+    spec:
+      containers:
+        - name: matrix-alertmanager-receiver
+          image: metio/matrix-alertmanager-receiver:2026.8.5@sha256:aa6feed0cb9b6b36d4f9821d32f02d8959dca9f345fe0d7539cb28ac2203d541
+          args:
+            - --config-path=/config/config.yaml
+            - --log-level=info
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: MATRIX_USER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: matrix-receiver
+                  key: MATRIX_USER_ID
+            - name: MATRIX_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: matrix-receiver
+                  key: MATRIX_ACCESS_TOKEN
+            - name: MATRIX_ROOM_ID
+              valueFrom:
+                secretKeyRef:
+                  name: matrix-receiver
+                  key: MATRIX_ROOM_ID
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+            limits: { memory: 64Mi }
+      volumes:
+        - name: config
+          configMap:
+            name: matrix-receiver-config
