@@ -42,6 +42,20 @@ README.md           # one README to rule them all
 renovate.json       # automatic update config
 ```
 
+## Network
+
+Everything runs on a single NixOS server. Besides K3s, it also hosts a KVM virtual machine running [OPNsense](https://opnsense.org/), which serves as my firewall (interfaces are passed to the VM as macvtap devices).
+
+OPNsense acts as my:
+- Firewall
+- Wireguard VPN server
+- DNS & DHCP server
+- Reverse proxy ([Caddy](https://caddyserver.com/))
+- ACME client
+- IDS/IPS ([Suricata](https://suricata.io/))
+
+Right now, Caddy terminates TLS and forwards the request over plain HTTP to K3s (with Traefik as ingress controller). So encryption currently ends at the firewall. Traffic between OPNsense and the cluster itself is plain HTTP. This traffic never leaves the node, but I plan on enabling TLS on Traefik as well, and re-encrypt traffic between the firewall and the cluster.
+
 ## GitOps & Flux
 
 Git is the single source of truth. Flux runs as a set of controllers inside the cluster (in the flux-system namespace) and continuously watches this repository.
