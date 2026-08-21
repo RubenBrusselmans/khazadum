@@ -47,7 +47,7 @@ spec:
             - start
           env:
             - name: KC_HOSTNAME
-              value: "auth.khazadum.net"
+              value: "https://auth.khazadum.net"
             - name: KC_HTTP_ENABLED
               value: "true"
             - name: KC_PROXY_HEADERS
