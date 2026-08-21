@@ -3,6 +3,7 @@
   "extends": ["config:recommended"],
   "timezone": "Europe/Brussels",
   "schedule": ["before 6am"],
+  "commitMessagePrefix": "renovate:",
   "ignorePaths": ["clusters/khazadum/flux-system/**"],
   "automergeStrategy": "squash",
   "prHourlyLimit": 10,
