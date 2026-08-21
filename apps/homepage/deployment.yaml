@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: homepage
-          image: ghcr.io/gethomepage/homepage:latest@sha256:638dacf5c844e908dc06c1fd57a2b5694f8efd91f91f152829ea0c2f547458f2
+          image: ghcr.io/gethomepage/homepage:latest@sha256:da9dca9ec258c628146bed1445da0853f2b88f0b10bafd97c091de807c363d60
           ports:
             - containerPort: 3000
           env:
