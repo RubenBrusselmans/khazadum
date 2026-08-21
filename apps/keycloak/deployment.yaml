@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: keycloak
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: postgres
+          image: docker.io/library/postgres:17.11@sha256:e38411452a464af89e5adadb8d223bf53b898d47d6ef918b2d58c08707350449
+          env:
+            - name: POSTGRES_DB
+              value: "keycloak"
+            - name: POSTGRES_USER
+              value: "keycloak"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak
+                  key: DB_PASSWORD
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - keycloak
+                - -d
+                - keycloak
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.7.2@sha256:831330513f55695572286e521f94fcd3c7e285250ed5b848090265a33192f669
+          args:
+            - start
+          env:
+            - name: KC_HOSTNAME
+              value: "auth.khazadum.net"
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_PROXY_HEADERS
+              value: "xforwarded"
+            - name: KC_DB
+              value: "postgres"
+            - name: KC_DB_URL_HOST
+              value: "127.0.0.1"
+            - name: KC_DB_URL_DATABASE
+              value: "keycloak"
+            - name: KC_DB_USERNAME
+              value: "keycloak"
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak
+                  key: DB_PASSWORD
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              value: "admin"
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak
+                  key: KEYCLOAK_ADMIN_PASSWORD
+            - name: KC_HEALTH_ENABLED
+              value: "true"
+          ports:
+            - containerPort: 8080
+            - containerPort: 9000
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 9000
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 9000
+            periodSeconds: 15
+            failureThreshold: 3
+      volumes:
+        - name: postgres-data
+          hostPath:
+            path: /data/crypt/keycloak/postgres
+            type: DirectoryOrCreate

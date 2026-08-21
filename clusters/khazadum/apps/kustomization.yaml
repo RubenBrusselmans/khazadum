@@ -8,3 +8,4 @@ resources:
   - gundabad.yaml
   - jellyfin.yaml
   - nextcloud.yaml
+  - keycloak.yaml
