@@ -24,7 +24,7 @@ spec:
         - name: PGID
           value: "100"
         - name: TZ
-          value: "Etc/Brussels"
+          value: "Europe/Brussels"
         - name: MEM_LIMIT
           value: "1024"
         - name: MEM_STARTUP
