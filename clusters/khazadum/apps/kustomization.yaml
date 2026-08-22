@@ -9,3 +9,4 @@ resources:
   - jellyfin.yaml
   - nextcloud.yaml
   - keycloak.yaml
+  - ansible.yaml
