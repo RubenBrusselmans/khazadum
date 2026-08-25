@@ -5,4 +5,6 @@ metadata:
   namespace: flux-system
 spec:
   url: https://grafana.github.io/helm-charts
-  interval: 24h
+  # short interval, otherwise renovate might bump chart version
+  # long before flux cache gets refreshed
+  interval: 1h
