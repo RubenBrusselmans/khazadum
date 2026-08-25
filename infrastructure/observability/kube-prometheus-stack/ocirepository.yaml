@@ -13,3 +13,7 @@ spec:
   ref:
     tag: 88.5.4
     digest: sha256:2d74cab37e82d84bf50a87e84ad9d5fa67b12d5d8ec341b134cb74b3d48e7908
+  # https://fluxcd.io/flux/components/source/ocirepositories/#layer-selector
+  # pick the layer by type, not by position (88.5.4 swapped order)
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip

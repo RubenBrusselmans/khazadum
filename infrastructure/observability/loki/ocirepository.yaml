@@ -13,3 +13,7 @@ spec:
   ref:
     tag: 7.3.0
     digest: sha256:ba8b6b3ee954c9d6eeee713d148a22e6f73eb440189e11acd3112a06acdfd2f8
+  # https://fluxcd.io/flux/components/source/ocirepositories/#layer-selector
+  # pick the layer by type, not by position, to prevent same breakage of KPS
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
