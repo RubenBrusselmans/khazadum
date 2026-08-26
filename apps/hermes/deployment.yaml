@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: hermes
-          image: docker.io/nousresearch/hermes-agent:latest@sha256:8c1cc8be4329c997840ce1dccd0a948520d8c4b8cbe40f7c9d24154be266fce2
+          image: docker.io/nousresearch/hermes-agent:latest@sha256:c5bf0f94fc04fe239994cba0f4eb140b3d2454e2dac11f0861dd20b3b0fa3791
           args: ["gateway", "run"]
           ports:
             - containerPort: 8642
