@@ -56,7 +56,7 @@ spec:
             - name: redis-data
               mountPath: /data
         - name: nextcloud
-          image: docker.io/library/nextcloud:34.0.3@sha256:8e5f49801db0cf4659b3089ce1917728023bb8cba7f93731f2abbdfe3a18df0a
+          image: docker.io/library/nextcloud:34.0.3@sha256:da8a54816fca90e2de7cba27e5d476ed00db55ab9aade462f926db8c1463245b
           env:
             - name: MYSQL_DATABASE
               value: "nextcloud"
@@ -90,7 +90,7 @@ spec:
             - name: media
               mountPath: /media
         - name: cron
-          image: docker.io/library/nextcloud:34.0.3@sha256:8e5f49801db0cf4659b3089ce1917728023bb8cba7f93731f2abbdfe3a18df0a
+          image: docker.io/library/nextcloud:34.0.3@sha256:da8a54816fca90e2de7cba27e5d476ed00db55ab9aade462f926db8c1463245b
           command: ["/cron.sh"]
           volumeMounts:
             - name: nextcloud-config
