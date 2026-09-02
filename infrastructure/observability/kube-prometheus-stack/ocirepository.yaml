@@ -11,8 +11,8 @@ spec:
   interval: 10m
   url: oci://ghcr.io/prometheus-community/charts/kube-prometheus-stack
   ref:
-    tag: 88.6.2
-    digest: sha256:081ae2823990852284fa1f3f9e718314b990c06f279802c7684818bcb9002481
+    tag: 88.6.3
+    digest: sha256:9bb6ffe7a468c941411de9a0d00e5bb41ecf4aee0edf25c05dcea2910604a560
   # https://fluxcd.io/flux/components/source/ocirepositories/#layer-selector
   # pick the layer by type, not by position (88.5.4 swapped order)
   layerSelector:
