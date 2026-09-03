@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: affine
+  namespace: affine
+spec:
+  rules:
+    - host: affine.khazadum.net
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: affine
+                port:
+                  number: 80

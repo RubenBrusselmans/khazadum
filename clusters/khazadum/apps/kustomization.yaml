@@ -10,3 +10,4 @@ resources:
   - nextcloud.yaml
   - keycloak.yaml
   - ansible.yaml
+  - affine.yaml

@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: affine
+  namespace: affine
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: affine
+  template:
+    metadata:
+      labels:
+        app: affine
+    spec:
+      initContainers:
+        - name: migration
+          image: ghcr.io/toeverything/affine:stable@sha256:b649f5ce2384ffdf13c23bccf81d759e15973d59d0b0058af65d895a84373099
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until node ./scripts/self-host-predeploy.js; do
+                echo "predeploy failed, retrying in 5s"
+                sleep 5
+              done
+          env:
+            - name: REDIS_SERVER_HOST
+              value: "127.0.0.1"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: affine
+                  key: DATABASE_URL
+            - name: AFFINE_INDEXER_ENABLED
+              value: "false"
+          volumeMounts:
+            - name: storage
+              mountPath: /root/.affine/storage
+            - name: config
+              mountPath: /root/.affine/config
+      containers:
+        - name: postgres
+          image: docker.io/pgvector/pgvector:pg16@sha256:ccc6e83d6e35e931dc7c5def2022729d5a6c370318d099181995567ff1fb4d6b
+          env:
+            - name: POSTGRES_DB
+              value: "affine"
+            - name: POSTGRES_USER
+              value: "affine"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: affine
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_INITDB_ARGS
+              value: "--data-checksums"
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - affine
+                - -d
+                - affine
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+        - name: redis
+          image: docker.io/library/redis:alpine@sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576
+          args:
+            - --appendonly
+            - "yes"
+            - --appendfsync
+            - everysec
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+        - name: affine
+          image: ghcr.io/toeverything/affine:stable@sha256:b649f5ce2384ffdf13c23bccf81d759e15973d59d0b0058af65d895a84373099
+          env:
+            - name: REDIS_SERVER_HOST
+              value: "127.0.0.1"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: affine
+                  key: DATABASE_URL
+            - name: AFFINE_INDEXER_ENABLED
+              value: "false"
+            - name: AFFINE_SERVER_EXTERNAL_URL
+              value: "https://affine.khazadum.net"
+          ports:
+            - containerPort: 3010
+          resources:
+            limits:
+              memory: 2Gi
+          readinessProbe:
+            tcpSocket:
+              port: 3010
+            periodSeconds: 15
+            failureThreshold: 3
+          volumeMounts:
+            - name: storage
+              mountPath: /root/.affine/storage
+            - name: config
+              mountPath: /root/.affine/config
+      volumes:
+        - name: postgres-data
+          hostPath:
+            path: /data/crypt/affine/postgres
+            type: DirectoryOrCreate
+        - name: redis-data
+          hostPath:
+            path: /data/crypt/affine/redis
+            type: DirectoryOrCreate
+        - name: storage
+          hostPath:
+            path: /data/crypt/affine/storage
+            type: DirectoryOrCreate
+        - name: config
+          hostPath:
+            path: /data/crypt/affine/config
+            type: DirectoryOrCreate
