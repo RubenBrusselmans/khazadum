@@ -16,33 +16,9 @@ spec:
         app: affine
     spec:
       initContainers:
-        - name: migration
-          image: ghcr.io/toeverything/affine:stable@sha256:b649f5ce2384ffdf13c23bccf81d759e15973d59d0b0058af65d895a84373099
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              until node ./scripts/self-host-predeploy.js; do
-                echo "predeploy failed, retrying in 5s"
-                sleep 5
-              done
-          env:
-            - name: REDIS_SERVER_HOST
-              value: "127.0.0.1"
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: affine
-                  key: DATABASE_URL
-            - name: AFFINE_INDEXER_ENABLED
-              value: "false"
-          volumeMounts:
-            - name: storage
-              mountPath: /root/.affine/storage
-            - name: config
-              mountPath: /root/.affine/config
-      containers:
         - name: postgres
           image: docker.io/pgvector/pgvector:pg16@sha256:ccc6e83d6e35e931dc7c5def2022729d5a6c370318d099181995567ff1fb4d6b
+          restartPolicy: Always
           env:
             - name: POSTGRES_DB
               value: "affine"
@@ -70,6 +46,7 @@ spec:
               mountPath: /var/lib/postgresql/data
         - name: redis
           image: docker.io/library/redis:alpine@sha256:becdda6c7f4b3fb42e42fd7f120bbf5c54c4caaaf16f26da24e4563d2c1f0576
+          restartPolicy: Always
           args:
             - --appendonly
             - "yes"
@@ -78,6 +55,31 @@ spec:
           volumeMounts:
             - name: redis-data
               mountPath: /data
+        - name: migration
+          image: ghcr.io/toeverything/affine:stable@sha256:b649f5ce2384ffdf13c23bccf81d759e15973d59d0b0058af65d895a84373099
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              until node ./scripts/self-host-predeploy.js; do
+                echo "predeploy failed, retrying in 5s"
+                sleep 5
+              done
+          env:
+            - name: REDIS_SERVER_HOST
+              value: "127.0.0.1"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: affine
+                  key: DATABASE_URL
+            - name: AFFINE_INDEXER_ENABLED
+              value: "false"
+          volumeMounts:
+            - name: storage
+              mountPath: /root/.affine/storage
+            - name: config
+              mountPath: /root/.affine/config
+      containers:
         - name: affine
           image: ghcr.io/toeverything/affine:stable@sha256:b649f5ce2384ffdf13c23bccf81d759e15973d59d0b0058af65d895a84373099
           env:
