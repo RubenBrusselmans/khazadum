@@ -1,9 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": ["config:recommended", ":semanticCommits"],
   "timezone": "Europe/Brussels",
   "schedule": ["before 6am"],
-  "commitMessagePrefix": "renovate:",
   "ignorePaths": ["clusters/khazadum/flux-system/**"],
   "automergeStrategy": "squash",
   "prHourlyLimit": 10,
