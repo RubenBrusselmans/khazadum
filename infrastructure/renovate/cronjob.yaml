@@ -4,7 +4,8 @@ metadata:
   name: renovate
   namespace: renovate
 spec:
-  schedule: "0 */2 * * *" # every 2h
+  schedule: "0 3 * * *"
+  timeZone: Europe/Brussels
   concurrencyPolicy: Forbid
   startingDeadlineSeconds: 300
   successfulJobsHistoryLimit: 3
