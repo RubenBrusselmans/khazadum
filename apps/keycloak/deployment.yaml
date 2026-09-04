@@ -67,13 +67,6 @@ spec:
                 secretKeyRef:
                   name: keycloak
                   key: DB_PASSWORD
-            - name: KC_BOOTSTRAP_ADMIN_USERNAME
-              value: "admin"
-            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: keycloak
-                  key: KEYCLOAK_ADMIN_PASSWORD
             - name: KC_HEALTH_ENABLED
               value: "true"
           ports:
