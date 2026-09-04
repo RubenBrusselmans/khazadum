@@ -79,6 +79,9 @@ spec:
               mountPath: /root/.affine/storage
             - name: config
               mountPath: /root/.affine/config
+            - name: config-file
+              mountPath: /root/.affine/config/config.json
+              subPath: config.json
       containers:
         - name: affine
           image: ghcr.io/toeverything/affine:stable@sha256:b649f5ce2384ffdf13c23bccf81d759e15973d59d0b0058af65d895a84373099
@@ -109,6 +112,9 @@ spec:
               mountPath: /root/.affine/storage
             - name: config
               mountPath: /root/.affine/config
+            - name: config-file
+              mountPath: /root/.affine/config/config.json
+              subPath: config.json
       volumes:
         - name: postgres-data
           hostPath:
@@ -126,3 +132,6 @@ spec:
           hostPath:
             path: /data/crypt/affine/config
             type: DirectoryOrCreate
+        - name: config-file
+          configMap:
+            name: affine-config
