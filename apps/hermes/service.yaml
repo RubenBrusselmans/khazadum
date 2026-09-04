@@ -7,7 +7,8 @@ spec:
   selector:
     app: hermes
   ports:
-    - port: 9119
+    - name: dashboard
+      port: 9119
       targetPort: 9119
     - name: api
       port: 8642
