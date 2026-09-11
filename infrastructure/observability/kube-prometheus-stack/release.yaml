@@ -14,6 +14,14 @@ spec:
       ingress:
         enabled: true
         ingressClassName: traefik
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Prometheus
+          gethomepage.dev/group: Infra
+          gethomepage.dev/icon: prometheus.png
+          gethomepage.dev/pod-selector: app.kubernetes.io/name=prometheus
+          gethomepage.dev/widget.type: prometheus
+          gethomepage.dev/widget.url: https://prometheus.khazadum.net
         hosts:
           - prometheus.khazadum.net
       # the service monitor for device-metrics-exporter is declared here
@@ -49,6 +57,12 @@ spec:
       ingress:
         enabled: true
         ingressClassName: traefik
+        annotations:
+          gethomepage.dev/enabled: "true"
+          gethomepage.dev/name: Alertmanager
+          gethomepage.dev/group: Infra
+          gethomepage.dev/icon: alertmanager.png
+          gethomepage.dev/pod-selector: app.kubernetes.io/name=alertmanager
         hosts:
           - alertmanager.khazadum.net
       alertmanagerSpec:

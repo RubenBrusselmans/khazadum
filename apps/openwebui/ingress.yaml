@@ -3,6 +3,12 @@ kind: Ingress
 metadata:
   name: openwebui
   namespace: openwebui
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Open WebUI
+    gethomepage.dev/group: AI
+    gethomepage.dev/icon: open-webui-light.png
+    gethomepage.dev/pod-selector: app=openwebui
 spec:
   rules:
     - host: openwebui.khazadum.net

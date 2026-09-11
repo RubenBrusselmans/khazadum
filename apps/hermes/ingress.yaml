@@ -3,6 +3,12 @@ kind: Ingress
 metadata:
   name: hermes
   namespace: hermes
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Hermes Agent
+    gethomepage.dev/group: AI
+    gethomepage.dev/icon: https://cdn.jsdelivr.net/gh/selfhst/icons/png/hermes-agent.png
+    gethomepage.dev/pod-selector: app=hermes
 spec:
   rules:
     - host: hermes.khazadum.net

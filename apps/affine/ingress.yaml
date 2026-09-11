@@ -3,6 +3,12 @@ kind: Ingress
 metadata:
   name: affine
   namespace: affine
+  annotations:
+    gethomepage.dev/enabled: "true"
+    gethomepage.dev/name: Affine
+    gethomepage.dev/group: Infra
+    gethomepage.dev/icon: affine-light.png
+    gethomepage.dev/pod-selector: app=affine
 spec:
   rules:
     - host: affine.khazadum.net
