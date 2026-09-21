@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nextcloud-php-overrides
+  namespace: nextcloud
+data:
+  zz-session-override.ini: |
+    ; Stock image ships redis-session.ini with locking_enabled=1,
+    ; lock_retries=-1 and no lock_expire (infinite hold): every parallel
+    ; request of one user serializes on the Redis session lock.
+    redis.session.locking_enabled = 0
+
+    ; nextcloud AIO image defaults.
+    opcache.max_accelerated_files = 20000
+    opcache.memory_consumption = 256
+    opcache.interned_strings_buffer = 64
+
+    ; APCu local-cache headroom (stock 32M, AIO ships 128M)
+    apc.shm_size = 128M
+    apc.enable_cli = 1
