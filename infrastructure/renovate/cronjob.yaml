@@ -22,7 +22,7 @@ spec:
           restartPolicy: Never
           containers:
             - name: renovate
-              image: docker.io/renovate/renovate:44.115.2@sha256:62af1deb6f45883afb105b22cb4b4d2503071e12794b6e297628e40c798349b4
+              image: docker.io/renovate/renovate:44.115.10@sha256:e262ed52b23dd8c545c80faf5b1ad5c95a07b3f198888de8d7b8928f45c307c7
               env:
                 - name: RENOVATE_CONFIG_FILE
                   value: /opt/renovate/config.js
