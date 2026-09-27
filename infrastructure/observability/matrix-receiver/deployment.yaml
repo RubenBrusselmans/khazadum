@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: matrix-alertmanager-receiver
-          image: metio/matrix-alertmanager-receiver:2026.8.26@sha256:f6235a5de611d099e05313c195e7af6722bd22cbe7d2e596482ca2adc51f9da7
+          image: metio/matrix-alertmanager-receiver:2026.9.23@sha256:854b615e109ccbbd0fb7e7a65028d876115d36d522ed65cb564154495e35bc03
           args:
             - --config-path=/config/config.yaml
             - --log-level=info
