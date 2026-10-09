@@ -56,7 +56,7 @@ spec:
             - name: redis-data
               mountPath: /data
         - name: nextcloud
-          image: docker.io/library/nextcloud:34.0.4@sha256:72f5cc3347042dd5dcad72edc376b19d0e042194af344a549820affd04804c8f
+          image: docker.io/library/nextcloud:34.0.4@sha256:0e5688ba0988b9112cf03f9c6bab53eccb466d278435f6596f16c1f25acacf74
           env:
             - name: MYSQL_DATABASE
               value: "nextcloud"
@@ -94,7 +94,7 @@ spec:
               subPath: zz-session-override.ini
               readOnly: true
         - name: cron
-          image: docker.io/library/nextcloud:34.0.4@sha256:72f5cc3347042dd5dcad72edc376b19d0e042194af344a549820affd04804c8f
+          image: docker.io/library/nextcloud:34.0.4@sha256:0e5688ba0988b9112cf03f9c6bab53eccb466d278435f6596f16c1f25acacf74
           command: ["/cron.sh"]
           volumeMounts:
             - name: nextcloud-config
