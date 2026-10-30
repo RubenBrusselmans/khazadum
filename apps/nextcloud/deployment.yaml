@@ -83,7 +83,8 @@ spec:
                 - -r
                 - '$c = include "/var/www/html/config/config.php"; exit(empty($c["maintenance"]) ? 0 : 1);'
             periodSeconds: 15
-            failureThreshold: 3
+            timeoutSeconds: 10
+            failureThreshold: 10
           volumeMounts:
             - name: nextcloud-config
               mountPath: /var/www/html

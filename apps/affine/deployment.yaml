@@ -40,7 +40,8 @@ spec:
                 - -d
                 - affine
             periodSeconds: 10
-            failureThreshold: 3
+            timeoutSeconds: 5
+            failureThreshold: 30
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
@@ -105,7 +106,8 @@ spec:
             tcpSocket:
               port: 3010
             periodSeconds: 15
-            failureThreshold: 3
+            timeoutSeconds: 5
+            failureThreshold: 20
           volumeMounts:
             - name: storage
               mountPath: /root/.affine/storage

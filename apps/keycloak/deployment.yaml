@@ -39,7 +39,8 @@ spec:
                 - -d
                 - keycloak
             periodSeconds: 10
-            failureThreshold: 3
+            timeoutSeconds: 5
+            failureThreshold: 30
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
@@ -77,13 +78,15 @@ spec:
               path: /health/ready
               port: 9000
             periodSeconds: 5
+            timeoutSeconds: 5
             failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /health/ready
               port: 9000
             periodSeconds: 15
-            failureThreshold: 3
+            timeoutSeconds: 5
+            failureThreshold: 5
       volumes:
         - name: postgres-data
           hostPath:
