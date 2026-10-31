@@ -109,17 +109,12 @@ spec:
         enabled: true
         storageClassName: local-path
         size: 5Gi
-      # Crash forensics: on cold boots grafana exits code 2 silently right
-      # after "Loading plugins..." (console shows nothing, /var/log/grafana is
-      # in the ephemeral container layer). Persist file logs on the PVC so the
-      # fatal line survives a restart. level: debug is for one boot cycle —
-      # revert to info once the cause is captured.
       grafana.ini:
         paths:
           logs: /var/lib/grafana/log
         log:
           mode: "console file"
-          level: debug
+          level: info
       resources:
         requests: { cpu: 100m, memory: 256Mi }
         limits: { memory: 1Gi }
