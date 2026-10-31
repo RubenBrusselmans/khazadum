@@ -318,6 +318,7 @@ kubectl get helmcharts.source.toolkit.fluxcd.io -A
 
 ```sh
 sudo systemctl stop k3s
+sudo k3s-killall.sh
 sudo reboot
 
 sudo zfs load-key data/crypt
