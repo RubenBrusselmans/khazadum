@@ -19,6 +19,16 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
+  dependsOn:
+    - name: git
+    - name: notifications
+    - name: observability
+    - name: backup
+    - name: renovate
+    - name: keycloak
+    - name: nextcloud
+    - name: jellyfin
+    - name: homepage
   path: ./
   sourceRef:
     kind: GitRepository
