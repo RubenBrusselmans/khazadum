@@ -316,15 +316,22 @@ kubectl get helmcharts.source.toolkit.fluxcd.io -A
 
 ## reboot cluster
 
+Drain first: uncleanly killed mariadb/postgres/prometheus run crash recovery on next boot and slow everything down.
+
+If not drained, all pods start at the same time and overload the HDD.
+
 ```sh
+kubectl drain tower --ignore-daemonsets --delete-emptydir-data --force
 sudo systemctl stop k3s
 sudo k3s-killall.sh
+
 sudo reboot
 
 sudo zfs load-key data/crypt
 sudo zfs mount data/crypt
 mountpoint /data/crypt
 sudo systemctl start k3s
+kubectl uncordon tower
 ```
 
 ## Inspiration
