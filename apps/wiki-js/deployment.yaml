@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wiki
-  namespace: wiki
+  name: wiki-js
+  namespace: wiki-js
 spec:
   replicas: 1
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app: wiki
+      app: wiki-js
   template:
     metadata:
       labels:
-        app: wiki
+        app: wiki-js
     spec:
       containers:
-        - name: wiki
+        - name: wiki-js
           image: docker.io/requarks/wiki:3@sha256:9424867464d9d899f975bbadb8ff1f794341eadd720b5fb5c22f0988c62e29bf
           env:
             - name: DB_HOST
@@ -30,7 +30,7 @@ spec:
             - name: DB_PASS
               valueFrom:
                 secretKeyRef:
-                  name: wiki
+                  name: wiki-js
                   key: DB_PASSWORD
             - name: LOG_LEVEL
               value: "info"
@@ -58,7 +58,7 @@ spec:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: wiki
+                  name: wiki-js
                   key: DB_PASSWORD
             - name: PGDATA
               value: /var/lib/postgresql/data/wiki
@@ -88,5 +88,5 @@ spec:
       volumes:
         - name: postgres-data
           hostPath:
-            path: /data/crypt/wiki/db
+            path: /data/crypt/wiki-js/db
             type: DirectoryOrCreate
