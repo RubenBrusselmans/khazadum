@@ -21,7 +21,7 @@ spec:
         # kc.sh resolves its home from its own path -> build the copy in place,
         # start the copy. Build output dir is atomic (build in .tmp, then mv).
         - name: bake
-          image: quay.io/keycloak/keycloak:26.8.1@sha256:79c623a22abacf3fe6c00a5fb30f5b7843d717b234033b80995891c06116d244
+          image: quay.io/keycloak/keycloak:26.8.1@sha256:3f3c5f8e03c614774b4bd9173b88391fefa4153bfc010d8012d59ad825377332
           securityContext:
             runAsUser: 0
           command: ["/bin/sh", "-c"]
@@ -61,7 +61,7 @@ spec:
               mountPath: /kc-opt
       containers:
         - name: postgres
-          image: docker.io/library/postgres:18.6@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
+          image: docker.io/library/postgres:18.6@sha256:e3d24f6906d0760bf4da0dae872415391ededefad23fd471c47dc53b0ddf3c42
           env:
             - name: POSTGRES_DB
               value: "keycloak"
@@ -89,7 +89,7 @@ spec:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
         - name: keycloak
-          image: quay.io/keycloak/keycloak:26.8.1@sha256:79c623a22abacf3fe6c00a5fb30f5b7843d717b234033b80995891c06116d244
+          image: quay.io/keycloak/keycloak:26.8.1@sha256:3f3c5f8e03c614774b4bd9173b88391fefa4153bfc010d8012d59ad825377332
           command: ["/bin/sh", "-c"]
           args:
             - |

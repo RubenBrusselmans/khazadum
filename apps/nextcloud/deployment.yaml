@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: mariadb
-          image: docker.io/library/mariadb:11.8.9@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15
+          image: docker.io/library/mariadb:11.8.9@sha256:d36f18d65a0459510b8b0f643b226a6d299e3206486e2b64ff20754a6d291707
           args:
             - --transaction-isolation=READ-COMMITTED
             - --log-bin=binlog
@@ -42,7 +42,7 @@ spec:
             - name: mariadb-data
               mountPath: /var/lib/mysql
         - name: redis
-          image: docker.io/library/redis:alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0
+          image: docker.io/library/redis:alpine@sha256:7958cfbb9d152f87dadfbc89f1b0b15938f0b81ff8982feb327476f4911935c3
           args:
             - --appendonly
             - "yes"
@@ -103,7 +103,7 @@ spec:
         - name: db-dump
           # dump at 02:30 (before the 03:00 backup)
           # gzip dumps under /data/crypt/nextcloud/dumps
-          image: docker.io/library/mariadb:11.8.9@sha256:6422478cb8e159f080fb1d8ccf65101e26fe51385787fde7d16c3b165a331f15
+          image: docker.io/library/mariadb:11.8.9@sha256:d36f18d65a0459510b8b0f643b226a6d299e3206486e2b64ff20754a6d291707
           command: ["/bin/sh", "-c"]
           args:
             - |

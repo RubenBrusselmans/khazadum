@@ -17,7 +17,7 @@ spec:
     spec:
       initContainers:
         - name: postgres
-          image: docker.io/pgvector/pgvector:pg16@sha256:7b822b0aac60967beb1ea5e576b8602c94c300a157d187f385ae3e0da199b90a
+          image: docker.io/pgvector/pgvector:pg16@sha256:484e838076e04939d27d3e176e91c86eea96236126023be8d3059761122e579f
           restartPolicy: Always
           env:
             - name: POSTGRES_DB
@@ -46,7 +46,7 @@ spec:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
         - name: redis
-          image: docker.io/library/redis:alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0
+          image: docker.io/library/redis:alpine@sha256:7958cfbb9d152f87dadfbc89f1b0b15938f0b81ff8982feb327476f4911935c3
           restartPolicy: Always
           args:
             - --appendonly
