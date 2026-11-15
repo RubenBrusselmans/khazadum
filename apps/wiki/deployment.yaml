@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wiki
+  namespace: wiki
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: wiki
+  template:
+    metadata:
+      labels:
+        app: wiki
+    spec:
+      containers:
+        - name: wiki
+          image: docker.io/requarks/wiki:3@sha256:9424867464d9d899f975bbadb8ff1f794341eadd720b5fb5c22f0988c62e29bf
+          env:
+            - name: DB_HOST
+              value: "127.0.0.1"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: "wiki"
+            - name: DB_USER
+              value: "wiki"
+            - name: DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: wiki
+                  key: DB_PASSWORD
+            - name: LOG_LEVEL
+              value: "info"
+          ports:
+            - containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+        - name: postgres
+          image: docker.io/library/postgres:18-alpine@sha256:b6972e1115a4ff8eba5d7f7d19184926d1e16d7d1136ae1e1a7ebf286da0f015
+          env:
+            - name: POSTGRES_DB
+              value: "wiki"
+            - name: POSTGRES_USER
+              value: "wiki"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wiki
+                  key: DB_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/wiki
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - wiki
+                - -d
+                - wiki
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - wiki
+                - -d
+                - wiki
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-data
+          hostPath:
+            path: /data/crypt/wiki/db
+            type: DirectoryOrCreate
