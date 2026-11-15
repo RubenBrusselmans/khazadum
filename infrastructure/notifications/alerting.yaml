@@ -1,4 +1,4 @@
-apiVersion: notification.toolkit.fluxcd.io/v1
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Provider
 metadata:
   name: matrix
@@ -10,13 +10,14 @@ spec:
   secretRef:
     name: matrix-notifier
 ---
-apiVersion: notification.toolkit.fluxcd.io/v1
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Alert
 metadata:
   name: matrix
   namespace: flux-system
 spec:
-  summary: "khazadum flux"
+  eventMetadata:
+    summary: "khazadum flux"
   providerRef:
     name: matrix
   eventSeverity: error
