@@ -1,0 +1,98 @@
+/* The Bridge of Khazad-dûm login theme (keycloak.v2, PatternFly v5) */
+
+:root.login-pf {
+  --keycloak-bg-logo-url: url('../img/bridge.jpg');
+  --keycloak-card-top-color: #ff9d2e;
+
+  --pf-v5-global--primary-color--100: #e07a24;
+  --pf-v5-global--primary-color--200: #ff9d2e;
+  --pf-v5-global--primary-color--300: #e07a24;
+  --pf-v5-global--primary-color--400: #1a0f06;
+  --pf-v5-global--active-color--100: #ff9d2e;
+  --pf-v5-global--link--Color: #e07a24;
+  --pf-v5-global--link--Color--hover: #ff9d2e;
+  --pf-v5-global--link--Color--dark: #e07a24;
+  --pf-v5-global--link--Color--dark--hover: #ff9d2e;
+}
+
+.login-pf .pf-v5-c-login {
+  --pf-v5-c-login__main-header--PaddingTop: 1.25rem;
+  --pf-v5-c-login__main-body--PaddingBottom: 1.5rem;
+  --pf-v5-c-login__main-footer--PaddingBottom: 0;
+}
+
+.login-pf body {
+  background:
+    linear-gradient(rgba(8, 5, 3, 0.55), rgba(8, 5, 3, 0.65)),
+    var(--keycloak-bg-logo-url) no-repeat center center fixed;
+  background-size: cover, cover;
+  background-color: #14100d;
+}
+
+.login-pf .pf-v5-c-login__main {
+  --pf-v5-c-login__main--BackgroundColor: rgba(18, 13, 10, 0.86);
+  backdrop-filter: blur(7px);
+  border: 1px solid rgba(255, 157, 46, 0.18);
+  border-radius: 10px;
+}
+
+.login-pf #kc-header {
+  display: none;
+}
+.login-pf div.pf-v5-c-login__main-header:not(:has(.pf-v5-c-login__main-header-utilities)) {
+  grid-template-columns: 100%;
+}
+.login-pf #kc-page-title {
+  font-family: "Palatino Linotype", "Book Antiqua", "URW Palladio L", P052, Georgia, serif;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+  text-indent: 0.06em; /* compensate the trailing letter-spacing so the line centers true */
+  color: #ffd27a;
+  text-shadow: 0 0 1rem rgba(255, 140, 40, 0.3);
+  text-align: center;
+}
+
+.login-pf .pf-v5-c-form-control,
+.login-pf .pf-v5-c-form-control.pf-m-readonly {
+  --pf-v5-c-form-control--BackgroundColor: rgba(32, 24, 18, 0.92);
+  --pf-v5-c-form-control--Color: #f2e9dd;
+  background-color: rgba(32, 24, 18, 0.92);
+  color: #f2e9dd;
+}
+.login-pf .pf-v5-c-form-control:hover,
+.login-pf .pf-v5-c-form-control:focus-within {
+  --pf-v5-c-form-control--hover--after--BorderBottomColor: #ff9d2e;
+  --pf-v5-c-form-control--focus--after--BorderBottomColor: #ff9d2e;
+  --pf-v5-c-form-control--after--BorderBottomColor: #ff9d2e;
+}
+.login-pf .pf-v5-c-form-control > :is(input, select, textarea):focus {
+  outline: none;
+}
+.login-pf .pf-v5-c-button.pf-m-control {
+  --pf-v5-c-button--m-control--BackgroundColor: rgba(32, 24, 18, 0.92);
+  --pf-v5-c-button--m-control--Color: #b8a89a;
+  background-color: rgba(32, 24, 18, 0.92);
+  color: #b8a89a;
+}
+
+.login-pf .pf-v5-c-form__label-text {
+  color: #b8a89a;
+}
+
+.login-pf .khazadum-quote {
+  margin: 0 auto 1.25rem;
+  text-align: center;
+  color: #b8a89a;
+  font-size: 0.88rem;
+  font-style: italic;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}
+
+.login-pf .pf-v5-c-button.pf-m-primary {
+  font-weight: 700;
+  --pf-v5-c-button--m-primary--Color: #1a0f06;
+  --pf-v5-c-button--m-primary--hover--Color: #1a0f06;
+  --pf-v5-c-button--m-primary--focus--Color: #1a0f06;
+  --pf-v5-c-button--m-primary--active--Color: #1a0f06;
+}
