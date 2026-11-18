@@ -15,6 +15,9 @@ spec:
       labels:
         app: woodpecker-agent
     spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
       serviceAccountName: woodpecker-agent
       containers:
       - name: agent
