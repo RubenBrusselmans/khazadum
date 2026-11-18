@@ -27,6 +27,8 @@ spec:
           value: "http://git.khazadum.net/"
         - name: FORGEJO__server__START_SSH_SERVER
           value: "false"
+        - name: FORGEJO__webhook__ALLOWED_HOST_LIST
+          value: "external,private"
         volumeMounts:
         - name: git-data
           mountPath: /data
