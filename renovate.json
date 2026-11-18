@@ -17,7 +17,7 @@
   },
   "packageRules": [
     {
-      "description": "Digest updates: automerge with PR, ignoreTests because there is no CI (yet).",
+      "description": "Digest updates: automerge with PR. ignoreTests stays on: CI (woodpecker) does not gate automerge yet.",
       "matchUpdateTypes": ["digest"],
       "groupName": "image digests",
       "automerge": true,
