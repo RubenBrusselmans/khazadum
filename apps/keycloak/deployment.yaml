@@ -15,50 +15,6 @@ spec:
       labels:
         app: keycloak
     spec:
-      initContainers:
-        # Bake an optimized Keycloak build into a persistent hostPath once per
-        # image version, so boots skip the Quarkus build (~7 min cold on HDD).
-        # kc.sh resolves its home from its own path -> build the copy in place,
-        # start the copy. Build output dir is atomic (build in .tmp, then mv).
-        - name: bake
-          image: quay.io/keycloak/keycloak:26.8.2@sha256:c68e286cacd87b942ac1939a0a1481461109d6acd3a57dc496969a319a76bbf0
-          securityContext:
-            runAsUser: 0
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              set -e
-              VER=$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' /opt/keycloak/version.txt | head -1)
-              DEST=/kc-opt/kc-$VER
-              if [ -d "$DEST" ]; then
-                echo "bake: $DEST already present, skipping build"
-                exit 0
-              fi
-              echo "bake: building optimized server for version $VER"
-              rm -rf /kc-opt/.tmp-kc /kc-opt/kc-"$VER"
-              cp -a /opt/keycloak /kc-opt/.tmp-kc
-              cd /kc-opt/.tmp-kc
-              bin/kc.sh build
-              mv /kc-opt/.tmp-kc "$DEST"
-              chown -R 1000:0 "$DEST"
-              touch "$DEST"
-              # GC stale versions (never the current one); cp -a preserves old
-              # mtimes, so only dirs we touched at build time age correctly.
-              find /kc-opt -maxdepth 1 -name 'kc-*' ! -name "kc-$VER" -type d -mtime +60 -exec rm -rf {} +
-          env:
-            - name: KC_DB
-              value: "postgres"
-            - name: KC_HOSTNAME
-              value: "https://auth.khazadum.net"
-            - name: KC_HTTP_ENABLED
-              value: "true"
-            - name: KC_PROXY_HEADERS
-              value: "xforwarded"
-            - name: KC_HEALTH_ENABLED
-              value: "true"
-          volumeMounts:
-            - name: kc-opt
-              mountPath: /kc-opt
       containers:
         - name: postgres
           image: docker.io/library/postgres:18.7@sha256:2ea8630df176ad090ec92136dee850397c5af8781e4bcf2e4162593691c61bbc
@@ -89,18 +45,8 @@ spec:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
         - name: keycloak
-          image: quay.io/keycloak/keycloak:26.8.2@sha256:c68e286cacd87b942ac1939a0a1481461109d6acd3a57dc496969a319a76bbf0
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              set -e
-              VER=$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' /opt/keycloak/version.txt | head -1)
-              DEST=/kc-opt/kc-$VER
-              if [ ! -x "$DEST/bin/kc.sh" ]; then
-                echo "keycloak: no baked build at $DEST" >&2
-                exit 1
-              fi
-              exec "$DEST/bin/kc.sh" start --optimized
+          image: git.khazadum.net/ruben/keycloak-khazadum:latest@sha256:21efa6998c8c64f5b0f537df558718f97d2f66fa452c7660c6b6092f02b17a0b
+          command: ["/opt/keycloak/bin/kc.sh", "start", "--optimized"]
           env:
             - name: KC_HOSTNAME
               value: "https://auth.khazadum.net"
@@ -140,14 +86,7 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 5
             failureThreshold: 5
-          volumeMounts:
-            - name: kc-opt
-              mountPath: /kc-opt
       volumes:
-        - name: kc-opt
-          hostPath:
-            path: /data/crypt/keycloak/kc-opt
-            type: DirectoryOrCreate
         - name: postgres-data
           hostPath:
             path: /data/crypt/keycloak/postgres
