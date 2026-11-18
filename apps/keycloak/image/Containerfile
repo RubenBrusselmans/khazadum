@@ -1,7 +1,11 @@
-FROM quay.io/keycloak/keycloak:26.8.2@sha256:c68e286cacd87b942ac1939a0a1481461109d6acd3a57dc496969a319a76bbf0
-
-# Custom login theme: "khazadum" (extends keycloak.v2).
-# The init "bake" container copies /opt/keycloak into its optimized build,
-# so themes placed here ride along into /kc-opt/kc-$VER/themes.
+FROM quay.io/keycloak/keycloak:26.8.2@sha256:c68e286cacd87b942ac1939a0a1481461109d6acd3a57dc496969a319a76bbf0 AS builder
+ENV KC_DB=postgres \
+    KC_HOSTNAME=https://auth.khazadum.net \
+    KC_HTTP_ENABLED=true \
+    KC_PROXY_HEADERS=xforwarded \
+    KC_HEALTH_ENABLED=true
 COPY themes/ /opt/keycloak/themes/
-COPY stamp.txt /opt/keycloak/themes/.khazadum-stamp
+RUN /opt/keycloak/bin/kc.sh build
+
+FROM quay.io/keycloak/keycloak:26.8.2@sha256:c68e286cacd87b942ac1939a0a1481461109d6acd3a57dc496969a319a76bbf0
+COPY --from=builder /opt/keycloak/ /opt/keycloak/

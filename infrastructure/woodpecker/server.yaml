@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: woodpecker-server
+  namespace: woodpecker
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: woodpecker-server
+  template:
+    metadata:
+      labels:
+        app: woodpecker-server
+    spec:
+      containers:
+      - name: server
+        image: woodpeckerci/woodpecker-server:v3.20.1@sha256:0f31560e29d67ec4a06d6eeee4bac38d2a2697a6a741b8a0db3998180f3a3517
+        ports:
+        - containerPort: 8000
+        - containerPort: 9000
+        env:
+        - name: WOODPECKER_HOST
+          value: https://woodpecker.khazadum.net
+        - name: WOODPECKER_ADMIN
+          value: ruben
+        - name: WOODPECKER_FORGEJO
+          value: "true"
+        - name: WOODPECKER_FORGEJO_URL
+          value: https://git.khazadum.net
+        - name: WOODPECKER_FORGEJO_CLIENT
+          valueFrom:
+            secretKeyRef:
+              name: woodpecker
+              key: WOODPECKER_FORGEJO_CLIENT
+        - name: WOODPECKER_FORGEJO_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: woodpecker
+              key: WOODPECKER_FORGEJO_SECRET
+        - name: WOODPECKER_AGENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: woodpecker
+              key: WOODPECKER_AGENT_SECRET
+        - name: WOODPECKER_GRPC_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: woodpecker
+              key: WOODPECKER_GRPC_SECRET
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+        volumeMounts:
+        - name: server-data
+          mountPath: /var/lib/woodpecker
+      volumes:
+      - name: server-data
+        hostPath:
+          path: /data/crypt/woodpecker
+          type: DirectoryOrCreate

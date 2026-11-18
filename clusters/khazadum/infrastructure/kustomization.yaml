@@ -6,3 +6,4 @@ resources:
   - backup.yaml
   - notifications.yaml
   - renovate.yaml
+  - woodpecker.yaml

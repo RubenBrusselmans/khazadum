@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: woodpecker-agent
+  namespace: woodpecker
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: woodpecker-agent
+  template:
+    metadata:
+      labels:
+        app: woodpecker-agent
+    spec:
+      serviceAccountName: woodpecker-agent
+      containers:
+      - name: agent
+        image: woodpeckerci/woodpecker-agent:v3.20.1@sha256:a7d7299a13add0b3936fa0ac9ed23507fe283a7fc7d9596c4289d7e8206541eb
+        ports:
+        - containerPort: 3000
+        env:
+        - name: WOODPECKER_SERVER
+          value: woodpecker-server:9000
+        - name: WOODPECKER_AGENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: woodpecker
+              key: WOODPECKER_AGENT_SECRET
+        - name: WOODPECKER_BACKEND
+          value: kubernetes
+        - name: WOODPECKER_BACKEND_K8S_NAMESPACE
+          value: woodpecker
+        - name: WOODPECKER_BACKEND_K8S_STORAGE_RWX
+          value: "false"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 3000
+        volumeMounts:
+        - name: agent-config
+          mountPath: /etc/woodpecker
+      volumes:
+      - name: agent-config
+        hostPath:
+          path: /data/crypt/woodpecker/agent
+          type: DirectoryOrCreate
