@@ -18,7 +18,7 @@ spec:
       hostname: device-metrics-exporter
       containers:
         - name: device-metrics-exporter
-          image: docker.io/rocm/device-metrics-exporter:v1.5.3@sha256:bdfc644bb8d4d07d9a0c31dda3e0d463101f48170548c5a7e7f7066c253fa813
+          image: docker.io/rocm/device-metrics-exporter:v1.5.4@sha256:435f01bb20470c905f65e5fa09756210030a96fd6c9c17ab1a0c4fb5cda9185c
           args:
             - -monitor-gpu
           ports:
