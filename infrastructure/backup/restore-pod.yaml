@@ -50,7 +50,7 @@ spec:
         - name: rclone-config
           mountPath: /config
     - name: restic
-      image: ghcr.io/restic/restic:latest@sha256:2f0373803493361f9304a57150d464677f69a9dad487afec202105aafb2592f2
+      image: ghcr.io/restic/restic:latest@sha256:ccb3af1abb107769156f339823d746722eba67bed2d0590a775a566ae7fc2454
       command: ["/bin/sh", "-c"]
       args: ["sleep infinity"] # don't do anything, this pod is to kubectl exec in
       env:
