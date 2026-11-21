@@ -39,22 +39,6 @@ docs/               # documentation
 renovate.json       # automatic update config
 ```
 
-## Documentation
-
-- [architecture.md](docs/architecture.md) — network path (OPNsense → Traefik), how Flux reconciles, the two Kustomization kinds
-- [deploying-apps.md](docs/deploying-apps.md) — full recipe for adding a new app (conventions, steps, verification)
-- [renovate.md](docs/renovate.md) — digest pinning & automatic updates: the model, the policy, the pitfalls
-- [secrets.md](docs/secrets.md) — SOPS + age: how encryption works, creating and rotating secrets
-- [commands.md](docs/commands.md) — kubectl & flux command reference
-- [reboot-cluster.md](docs/reboot-cluster.md) — how to reboot the cluster
-- [woodpecker-ci.md](docs/woodpecker-ci.md) — CI pipelines, the keycloak image build, registry & Renovate integration
-- [backup.md](docs/backup.md) — backups & snapshots: restic → rclone → Proton Drive, ZFS snapshots, restore
-- [nextcloud.md](docs/nextcloud.md) — Nextcloud stack: php-overrides, DB dumps, maintenance-mode gotchas
-- [keycloak.md](docs/keycloak.md) — Keycloak: CI-built themed image, update chain
-- [jellyfin.md](docs/jellyfin.md) — Jellyfin: why `privileged: true` can't be dropped, GPU device access
-- [roadmap.md](docs/roadmap.md) — improvement backlog from the 2026-11-20 audit: what's next for the cluster
-- [AGENTS.md](AGENTS.md) — guardrails for AI-agent sessions working in this repo
-
 ## Inspiration
 
 https://github.com/awesome-selfhosted/awesome-selfhosted
