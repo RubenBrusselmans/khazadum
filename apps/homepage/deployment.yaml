@@ -28,7 +28,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - wget -q -O /dev/null --header 'Host: khazadum.net' http://127.0.0.1:3000/
+                - "wget -q -O /dev/null --header 'Host: khazadum.net' http://127.0.0.1:3000/"
             periodSeconds: 10
             timeoutSeconds: 5
           livenessProbe:
@@ -36,7 +36,7 @@ spec:
               command:
                 - /bin/sh
                 - -c
-                - wget -q -O /dev/null --header 'Host: khazadum.net' http://127.0.0.1:3000/
+                - "wget -q -O /dev/null --header 'Host: khazadum.net' http://127.0.0.1:3000/"
             initialDelaySeconds: 30
             periodSeconds: 30
             timeoutSeconds: 5
