@@ -1,6 +1,6 @@
 # Backups & Snapshots
 
-Only for application data, k3s state itself can be rebuilt from git + NixOS config.
+These cover application data only. The k3s state itself can be rebuilt from git + NixOS config.
 
 1. Encrypted, incremental backups of `/data/crypt` to Proton Drive to protect against disk failure.
 2. ZFS snapshots of `/data/crypt` to protect against mistakes, bad updates, corruption...
@@ -11,7 +11,7 @@ Only for application data, k3s state itself can be rebuilt from git + NixOS conf
 - restic: because rclone does not provide encryption and deduplication.
 - rclone: like rsync but for cloud providers, including Proton Drive.
 
-Restic does the backup stuff, rclone is the pipeline to Proton Drive.
+Restic does the backup work, and rclone is the pipe to Proton Drive.
 
 ## ZFS snapshots
 
