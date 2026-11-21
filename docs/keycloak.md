@@ -45,3 +45,4 @@ rollout.
 - grafana (bypass: https://grafana.khazadum.net/login?disableAutoLogin)
 - forgejo (bypass: https://git.khazadum.net/user/login)
 - nextcloud (bypass: https://cloud.khazadum.net/login?direct=1)
+- openwebui (bypass: https://ai.khazadum.net/auth?form=1)
