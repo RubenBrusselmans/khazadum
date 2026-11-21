@@ -1,0 +1,46 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: git
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-clients
+  namespace: git
+spec:
+  podSelector:
+    matchLabels:
+      app: git
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - port: 3000
+          protocol: TCP
+      from:
+        # ingress traffic: Caddy -> traefik -> forgejo
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+        # flux source-controller pulls this repo and gundabad
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: flux-system
+        # renovate clones and talks to the API
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: renovate
+        # CI job pods clone sources and kaniko pushes images
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: woodpecker

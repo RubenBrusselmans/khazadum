@@ -15,20 +15,67 @@ wiring pieces together.
 
 ## 1. Network policies
 
-Only `infrastructure/backup/networkpolicy.yaml` exists. Everywhere else,
-any pod can open a connection to any service in the cluster. The external
-exposure is small: OPNsense is the front door and the node is not reachable
-from the internet. The problem is east-west. A compromised pod, say a
-vulnerable openwebui or wiki-js, could talk straight to the nextcloud
-mariadb, to redis, to keycloak, or to the woodpecker agent gRPC, and
-nothing would stop it.
+Progress: default-deny ingress is live for nextcloud and keycloak
+(2026-11-21, ingress-only; egress lockdown is a separate later pass).
+Everything else is still open: any pod can open a connection to any
+service anywhere.
 
-Practical first step: a default-deny NetworkPolicy in the namespaces that
-hold databases, which means nextcloud (mariadb and redis) and keycloak
-(postgres), followed by explicit allow rules for the known clients. Wider
-coverage can come later, namespace by namespace.
+Two corrections to the original audit wording, kept here so the threat
+model stays honest:
 
-Roughly a day of work for the first two namespaces.
+- The nextcloud mariadb/redis and keycloak postgres are sidecars inside
+  their app's pod and have no Services of their own. Nothing can reach
+  them by DNS name; the only path is scanning the flat flannel pod
+  network for the DB port on the pod IP, which a default-deny policy
+  blocks. Intra-pod 127.0.0.1 traffic is unreachable from outside the
+  pod and is not filtered by NetworkPolicy at all — no rules needed for
+  the DB hop.
+- The woodpecker gRPC is reachable cluster-wide, but registering as an
+  agent requires the agent secret, so bare reachability is
+  DoS/exploit surface, not instant access. The real untrusted tenant is
+  the CI job pods in the woodpecker namespace (arbitrary build code).
+
+The east-west surface that actually matters for the remaining
+namespaces: the web Services (forgejo, woodpecker, grafana, prometheus,
+loki, the apps in the external gundabad repo), matrix-receiver (any pod
+can POST fake alerts into Matrix), and unrestricted egress everywhere.
+Note the gundabad apps live in the other repo, so covering them is a
+change there, not here.
+
+Enforcement is confirmed working: k3s runs the default flannel +
+embedded network-policy controller (no `--disable-network-policy`), and
+a 2026-11-21 functional check from a pod proved a flux-allowed port
+answers while a blocked port times out. The backup and flux-system
+default-deny policies have been enforcing since 2026-08.
+
+Next coverage, cheapest first: observability (matrix-receiver),
+woodpecker, git, then gundabad, then egress.
+
+Status update 2026-11-21: nextcloud, keycloak, observability and
+woodpecker are done (same shape: default-deny + traefik allow;
+observability also allows its own namespace port-agnostic for the scrape
+mesh, woodpecker allows same-ns to the server's gRPC 9000). git is done
+too: one allow policy lists its four legitimate clients on port 3000
+(traefik, flux-system, renovate, woodpecker). All verified live:
+ingress URLs answer, all 14 prometheus targets scrape, loki ingests
+alloy's logs, a woodpecker pipeline ran clean, and renovate's manual
+run succeeded. One upstream quirk surfaced: kube-router syncs its
+allow-set asynchronously, so a CI pod that fires its first registry
+request seconds after start can be rejected transiently; the kaniko
+permission check is now skipped in the pipeline (kaniko documents this
+exact flag for delayed network policies). Side finding from the same
+session: the woodpecker server restarted on a liveness probe failure
+right after a pipeline push, with `database is locked` SQLite errors —
+no resource limits on it yet, so item 3 below got more urgent.
+
+Remaining coverage: the gundabad apps (do jellyfin together with them:
+they are likely its only cross-namespace clients on 8096), then
+egress. As of 2026-11-21 every other namespace in this repo is covered:
+homepage (3000), hermes (9119; the unused 8642 API port is now closed
+cross-ns), wiki-js (3000), openwebui (8080), ansible (default-deny
+only, no service). Final sweep passed: 11 public hosts answer, a
+pod-level probe matrix shows every protected namespace denying
+cross-namespace connections, all Kustomizations Ready.
 
 ## 2. Health probes
 

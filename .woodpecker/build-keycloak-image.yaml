@@ -32,4 +32,4 @@ steps:
       - AUTH=$$(echo -n $${REGISTRY_USER}:$${REGISTRY_TOKEN} | base64 | tr -d '\n')
       - mkdir -p /kaniko/.docker
       - printf '{"auths":{"git.git.svc.cluster.local:3000":{"auth":"%s"}}}' "$${AUTH}" > /kaniko/.docker/config.json
-      - /kaniko/executor --context /woodpecker/src/apps/keycloak/image --dockerfile Containerfile --destination git.git.svc.cluster.local:3000/ruben/keycloak-khazadum:latest --destination git.git.svc.cluster.local:3000/ruben/keycloak-khazadum:sha-$${SHA7} --insecure-registry git.git.svc.cluster.local:3000 --reproducible
+      - /kaniko/executor --context /woodpecker/src/apps/keycloak/image --dockerfile Containerfile --destination git.git.svc.cluster.local:3000/ruben/keycloak-khazadum:latest --destination git.git.svc.cluster.local:3000/ruben/keycloak-khazadum:sha-$${SHA7} --insecure-registry git.git.svc.cluster.local:3000 --reproducible --skip-push-permission-check
