@@ -27,6 +27,12 @@ spec:
           value: "http://git.khazadum.net/"
         - name: FORGEJO__server__START_SSH_SERVER
           value: "false"
+        - name: FORGEJO__server__LANDING_PAGE
+          value: "/user/oauth2/keycloak"
+        - name: FORGEJO__openid__ENABLE_OPENID_SIGNIN
+          value: "false"
+        - name: FORGEJO__openid__ENABLE_OPENID_SIGNUP
+          value: "false"
         - name: FORGEJO__webhook__ALLOWED_HOST_LIST
           value: "external,private"
         resources:

@@ -43,5 +43,5 @@ rollout.
 
 - wiki.js (bypass: https://wiki.khazadum.net/login?all=1)
 - grafana (bypass: https://grafana.khazadum.net/login?disableAutoLogin)
-- forgejo
+- forgejo (bypass: https://git.khazadum.net/user/login)
 - nextcloud (bypass: https://cloud.khazadum.net/login?direct=1)
