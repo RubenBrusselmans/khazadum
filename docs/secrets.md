@@ -105,8 +105,3 @@ the checksum and is safe.
 (renovate-bot PAT), `matrix-notifier` (Flux→Matrix), `woodpecker` (Forgejo
 OAuth client, agent + gRPC shared secrets). The gundabad app repo's secrets
 live in that repo, not here.
-
-## Related
-
-- [deploying-apps.md](deploying-apps.md) — wiring an app that uses secrets
-- [AGENTS.md](../AGENTS.md) — agent secrets protocol (agents never see values)

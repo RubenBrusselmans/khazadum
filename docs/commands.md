@@ -68,8 +68,3 @@ kubectl get kustomizations.kustomize.toolkit.fluxcd.io -A
 kubectl get helmreleases.helm.toolkit.fluxcd.io -A
 kubectl get helmcharts.source.toolkit.fluxcd.io -A
 ```
-
-## Related
-
-- [reboot-cluster.md](reboot-cluster.md) — the reboot procedure
-- [deploying-apps.md](deploying-apps.md) — the deploy/verify workflow

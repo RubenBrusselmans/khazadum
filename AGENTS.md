@@ -130,6 +130,9 @@ Details: [docs/secrets.md](docs/secrets.md).
 - `privileged: true` on jellyfin and device-metrics-exporter is required
   (removing it breaks GPU device access). Do not fix it piecemeal.
   See [docs/jellyfin.md](docs/jellyfin.md).
+- The improvement backlog lives in [docs/roadmap.md](docs/roadmap.md)
+  (audit 2026-11-20). Check it before proposing new work; remove entries
+  when they are done.
 
 ## Conventions
 

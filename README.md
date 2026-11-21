@@ -52,6 +52,7 @@ renovate.json       # automatic update config
 - [nextcloud.md](docs/nextcloud.md) — Nextcloud stack: php-overrides, DB dumps, maintenance-mode gotchas
 - [keycloak.md](docs/keycloak.md) — Keycloak: CI-built themed image, update chain
 - [jellyfin.md](docs/jellyfin.md) — Jellyfin: why `privileged: true` can't be dropped, GPU device access
+- [roadmap.md](docs/roadmap.md) — improvement backlog from the 2026-11-20 audit: what's next for the cluster
 - [AGENTS.md](AGENTS.md) — guardrails for AI-agent sessions working in this repo
 
 ## Inspiration

@@ -58,11 +58,3 @@ kustomization files. Each app requires both:
   the Flux controller which path in Git to sync, how often to check for
   updates, and how to handle configuration drift. It defines *how* and
   *when* to deploy.
-
-## Related
-
-- [deploying-apps.md](deploying-apps.md) — how to add a new application
-- [renovate.md](renovate.md) — how images and charts get updated
-- [secrets.md](secrets.md) — SOPS + age encryption at rest
-- [woodpecker-ci.md](woodpecker-ci.md) — CI for this repo and the keycloak image
-- [AGENTS.md](../AGENTS.md) — the same model as terse guardrails for AI agents

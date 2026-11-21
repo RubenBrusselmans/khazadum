@@ -79,9 +79,3 @@ Wiring a new app is two edits (the Flux Kustomization in
 `clusters/khazadum/apps/` + the entry in that folder's `kustomization.yaml`)
 plus the manifest folder. Infra apps use `clusters/khazadum/infrastructure/`
 instead.
-
-## Related
-
-- [renovate.md](renovate.md) — image pinning and updates
-- [secrets.md](secrets.md) — adding an encrypted secret to the new app
-- [commands.md](commands.md) — verification commands

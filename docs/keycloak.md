@@ -43,8 +43,3 @@ rollout.
 
 `secret.yaml` (SOPS): keycloak admin + DB credentials. Verify by DATA-key
 count only.
-
-## Related
-
-- [renovate.md](renovate.md) — why `latest@sha256:` and the no-image-overrides rule
-- [woodpecker-ci.md](woodpecker-ci.md) — pipelines, registry, secrets layers

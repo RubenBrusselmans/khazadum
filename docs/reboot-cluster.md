@@ -19,8 +19,3 @@ mountpoint /data/crypt
 sudo systemctl start k3s
 kubectl uncordon tower
 ```
-
-## Related
-
-- [commands.md](commands.md) — status/verification commands
-- [AGENTS.md](../AGENTS.md) — suspension pitfalls (`flux suspend` + removal orphans resources)

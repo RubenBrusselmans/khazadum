@@ -107,9 +107,3 @@ Renovate covers everything through reviewable PRs.
   window. "No PR appeared" during the day is expected, not broken.
 - Manual run:
   `kubectl -n renovate create job renovate-manual --from=cronjob/renovate`.
-
-## Related
-
-- [secrets.md](secrets.md) — how the renovate-bot PAT is stored
-- [woodpecker-ci.md](woodpecker-ci.md) — the CI-built keycloak image pipeline
-- [AGENTS.md](../AGENTS.md) — pinning rules as agent guardrails
