@@ -29,10 +29,6 @@ spec:
           value: "false"
         - name: FORGEJO__webhook__ALLOWED_HOST_LIST
           value: "external,private"
-        - name: FORGEJO__oauth2_client__ENABLE_AUTO_REGISTRATION
-          value: "true"
-        - name: FORGEJO__oauth2_client__USERNAME
-          value: "preferred_username"
         resources:
           requests: { cpu: 50m, memory: 320Mi }
         volumeMounts:
