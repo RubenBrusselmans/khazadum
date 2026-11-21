@@ -115,6 +115,8 @@ spec:
             name: grafana
             key: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
       grafana.ini:
+        server:
+          root_url: https://grafana.khazadum.net
         paths:
           logs: /var/lib/grafana/log
         log:
