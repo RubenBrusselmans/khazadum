@@ -41,6 +41,7 @@ rollout.
 
 ## Clients
 
-- wiki.js
-- grafana
+- wiki.js (bypass: https://wiki.khazadum.net/login?all=1)
+- grafana (bypass: https://grafana.khazadum.net/login?disableAutoLogin)
 - forgejo
+- nextcloud (bypass: https://cloud.khazadum.net/login?direct=1)
