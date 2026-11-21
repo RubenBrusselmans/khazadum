@@ -5,6 +5,8 @@ metadata:
   namespace: openwebui
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: openwebui
@@ -18,6 +20,21 @@ spec:
         image: ghcr.io/open-webui/open-webui:main@sha256:d6c085678f7e3f474aa2a92ac9831cb68759dcfd951de250ebbb37dac5cd0255
         ports:
         - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
         env:
         - name: ENABLE_ADMIN_CHAT_ACCESS
           value: "false"

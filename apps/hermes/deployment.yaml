@@ -5,6 +5,8 @@ metadata:
   namespace: hermes
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: hermes
@@ -20,6 +22,21 @@ spec:
           ports:
             - containerPort: 8642
             - containerPort: 9119
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9119
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9119
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
           env:
             - name: HERMES_DASHBOARD
               value: "1"

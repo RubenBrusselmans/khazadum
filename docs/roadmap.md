@@ -9,32 +9,22 @@ What is deliberately not on this list: backup coverage itself (restic
 covers all of `/data/crypt` with verification and retention), Flux
 failure alerting to Matrix, digest pinning and Renovate updates, and the
 CI setup. The audit found those in good shape; the one backup gap that
-remains is the failure alert, item 5 below. Network policies are off the
+remains is the failure alert, item 3 below. Network policies are off the
 list too: default-deny ingress is enforced in every namespace since
 2026-11-21 and new apps are expected to ship their own policy (see
 [deploying-apps.md](deploying-apps.md)). Egress filtering was evaluated
 and deliberately skipped — the maintenance cost outweighs the benefit
 for a single-operator cluster; LAN-side egress hardening can be
-revisited if the threat model changes. The remaining work is mostly
-about honest rollouts, fair scheduling, and wiring pieces together.
+revisited if the threat model changes. Health probes went in on
+2026-11-21, and the Recreate strategy gap closed in the same pass.
+Deliberate exceptions: ansible is a `sleep infinity`
+toolbox with nothing to probe, nextcloud gets no liveness (an httpGet
+would restart the pod while maintenance mode is on), and the Forgejo
+deployment lives in the external gundabad repo, so its probes are a
+follow-up there. The remaining work is mostly about fair scheduling and
+wiring pieces together.
 
-## 1. Health probes
-
-Only keycloak, wiki-js, nextcloud (one probe) and woodpecker have any.
-hermes, homepage, openwebui, jellyfin, git and ansible run with none.
-
-The Flux Kustomizations deploy with `wait: true`, so Flux reports an
-app as ready as soon as its pods start. Without a readinessProbe, a web
-app that hangs during startup, or wedges hours later, still looks
-healthy and nothing notices that port 80 stopped answering. A
-readinessProbe on every app that serves HTTP would make rollouts honest:
-the KS only goes Ready when the app actually answers. A livenessProbe
-then covers the wedged-after-startup case.
-
-Small job per app: an httpGet readinessProbe on the existing port, plus a
-livenessProbe where the process can deadlock.
-
-## 2. Resource requests and limits
+## 1. Resource requests and limits
 
 No container under `apps/` declares resource requests or limits, and the
 same goes for woodpecker, git and the backup CronJob; only the
@@ -53,7 +43,7 @@ The urgency is not theoretical: on 2026-11-21 the woodpecker server was
 restarted by its liveness probe right after a pipeline push, with
 `database is locked` SQLite errors and no limits to contain it.
 
-## 3. Keycloak has no clients
+## 2. Keycloak has no clients
 
 Keycloak runs, it is built by CI with the khazadum theme, and nothing
 authenticates against it. No app manifest mentions OIDC or OAuth.
@@ -64,22 +54,7 @@ their local logins. Nextcloud works too but needs the OIDC user backend
 app. Each client also needs a realm, a client definition and a secret in
 git, following docs/keycloak.md and docs/secrets.md.
 
-## 4. Missing Recreate strategy
-
-homepage, hermes and openwebui are the only single-replica apps without
-`strategy: Recreate`. The other five apps have it, and so does every
-deployment under infrastructure/. All three of the missing ones hold
-state on hostPath volumes: openwebui has SQLite under
-`/data/crypt/ai/openwebui`, hermes keeps its data there, homepage has
-its config.
-
-Without Recreate, the default RollingUpdate starts the new pod before
-the old one stops. On a single node, with the same hostPath mounted in
-both pods, that means two processes can share one SQLite file or config
-directory at once. This is the single-writer problem from the AGENTS.md
-rules, and it is a ten-minute fix per app.
-
-## 5. The backup failure alert never resolves
+## 3. The backup failure alert never resolves
 
 Backup failure alerting exists: the `BackupJobFailed` PrometheusRule in
 infrastructure/observability/kube-prometheus-stack/release.yaml pages
@@ -100,7 +75,7 @@ nightly, so this catches one missed night with margin). The Flux alert
 route does not help here: it only fires when the CronJob spec fails to
 reconcile, not when a healthy spec produces a failed run.
 
-## 6. TLS ends at the firewall
+## 4. TLS ends at the firewall
 
 Caddy on OPNsense terminates TLS for the khazadum.net domain and
 forwards plain HTTP to the cluster. Between OPNsense and Traefik, and
@@ -114,7 +89,7 @@ DNS challenge through OPNsense, or reuse the certs Caddy already
 fetches), then re-encrypt the Caddy to Traefik hop. Roughly a weekend,
 most of it testing the ingress chain.
 
-## 7. Small cleanups
+## 5. Small cleanups
 
 A few things to batch whenever an app is touched anyway:
 
@@ -122,9 +97,9 @@ A few things to batch whenever an app is touched anyway:
   root. Fine for a single-operator lab, worth tightening if the cluster
   ever grows a second tenant.
 - `privileged: true` on jellyfin and device-metrics-exporter is
-  load-bearing for GPU device access. Leave it alone until item 8.
+  load-bearing for GPU device access. Leave it alone until item 6.
 
-## 8. GPU device plugin
+## 6. GPU device plugin
 
 The proper fix for the privileged containers: an amdgpu device plugin
 DaemonSet (`rocm/k8s-device-plugin`) advertising `amd.com/gpu`, so
