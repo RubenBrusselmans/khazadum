@@ -109,7 +109,13 @@ kubectl -n backup logs job/<latest> -c restic
 
 ## Alerting
 
-See `BackupJobFailed` in `infrastructure/observability/kube-prometheus-stack/release.yaml`
+`BackupNotSuccessful` in
+`infrastructure/observability/kube-prometheus-stack/release.yaml` fires when
+no backup run has succeeded in the last 26 hours (the job runs nightly, so
+this catches one missed night with margin) and resolves when a later run
+succeeds. Do not revert to a `kube_job_status_failed`-based check: failed
+Job objects linger in `failedJobsHistoryLimit` history, so that alert never
+resolves.
 
 ## Cheat sheet
 

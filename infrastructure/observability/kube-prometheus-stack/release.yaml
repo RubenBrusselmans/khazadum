@@ -241,16 +241,19 @@ spec:
         prometheusOperator: true
 
     additionalPrometheusRulesMap:
-      # custom alert for backup cronjob failure
+      # custom alert: page when the last successful backup run is more than
+      # 26h old (nightly job); resolves as soon as a later run succeeds.
+      # Do not go back to a kube_job_status_failed check: failed Job objects
+      # linger in failedJobsHistoryLimit, so that alert never resolves.
       backup:
         groups:
           - name: backup
             rules:
-              - alert: BackupJobFailed
-                expr: kube_job_status_failed{namespace="backup", job_name=~"backup.*"} > 0
+              - alert: BackupNotSuccessful
+                expr: time() - kube_cronjob_status_last_successful_time{namespace="backup", cronjob="backup"} > 26 * 3600
                 for: 5m
                 labels:
                   severity: critical
                 annotations:
-                  summary: "Nightly backup job failed"
-                  description: "The backup CronJob has at least one failed job. Check `kubectl -n backup get jobs` and the rclone sidecar logs (`-c rclone`)."
+                  summary: "Nightly backup has not succeeded"
+                  description: "No successful backup run in the last 26 hours. Check `kubectl -n backup get jobs` and the rclone sidecar logs (`-c rclone`)."
