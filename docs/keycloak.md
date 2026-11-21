@@ -39,7 +39,7 @@ Custom login theme in `image/themes/khazadum/`. Theme changes ship through
 the same pipeline: edit themes → commit → build runs → digest bump PR →
 rollout.
 
-## Secrets
+## Clients
 
-`secret.yaml` (SOPS): keycloak admin + DB credentials. Verify by DATA-key
-count only.
+- wiki.js
+- grafana

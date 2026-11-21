@@ -100,7 +100,8 @@ the checksum and is safe.
 
 ## Secret inventory (names only)
 
-`nextcloud` (DB), `backup` (restic/rclone), `grafana` (admin),
+`nextcloud` (DB), `backup` (restic/rclone), `grafana` (admin + Keycloak
+OAuth client secret),
 `matrix-receiver` (Matrix creds), `flux-system` (git clone), `renovate`
 (renovate-bot PAT), `matrix-notifier` (Flux→Matrix), `woodpecker` (Forgejo
 OAuth client, agent + gRPC shared secrets). The gundabad app repo's secrets

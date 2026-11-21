@@ -109,12 +109,28 @@ spec:
         enabled: true
         storageClassName: local-path
         size: 5Gi
+      envValueFrom:
+        GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+          secretKeyRef:
+            name: grafana
+            key: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
       grafana.ini:
         paths:
           logs: /var/lib/grafana/log
         log:
           mode: "console file"
           level: info
+        auth.generic_oauth:
+          enabled: true
+          name: Keycloak
+          allow_sign_up: true
+          client_id: grafana
+          client_secret: "$__env{GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET}"
+          scopes: openid email profile
+          auth_url: https://auth.khazadum.net/realms/khazadum/protocol/openid-connect/auth
+          token_url: https://auth.khazadum.net/realms/khazadum/protocol/openid-connect/token
+          api_url: https://auth.khazadum.net/realms/khazadum/protocol/openid-connect/userinfo
+          role_attribute_path: "contains(roles[*], 'grafana-admin') && 'Admin' || 'Viewer'"
       resources:
         requests: { cpu: 100m, memory: 256Mi }
         limits: { memory: 1Gi }
