@@ -43,3 +43,4 @@ rollout.
 
 - wiki.js
 - grafana
+- forgejo
