@@ -68,14 +68,14 @@ session: the woodpecker server restarted on a liveness probe failure
 right after a pipeline push, with `database is locked` SQLite errors —
 no resource limits on it yet, so item 3 below got more urgent.
 
-Remaining coverage: the gundabad apps (do jellyfin together with them:
-they are likely its only cross-namespace clients on 8096), then
-egress. As of 2026-11-21 every other namespace in this repo is covered:
-homepage (3000), hermes (9119; the unused 8642 API port is now closed
-cross-ns), wiki-js (3000), openwebui (8080), ansible (default-deny
-only, no service). Final sweep passed: 11 public hosts answer, a
-pod-level probe matrix shows every protected namespace denying
-cross-namespace connections, all Kustomizations Ready.
+Remaining coverage: egress only. As of 2026-11-21 ingress is locked
+down in every namespace, including the gundabad apps and jellyfin
+(verified: all public hosts answer, pod-level probes show every
+protected namespace denying cross-namespace connections, the gundabad
+pod runs 10/10). No allow rule exists for anything to reach jellyfin
+except traefik — none of the external apps currently call it; if one
+gets wired up later, its namespace needs an explicit allow on 8096.
+All Kustomizations Ready.
 
 ## 2. Health probes
 
