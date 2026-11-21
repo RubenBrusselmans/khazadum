@@ -38,6 +38,23 @@ spec:
         env:
         - name: ENABLE_ADMIN_CHAT_ACCESS
           value: "false"
+        - name: ENABLE_LOGIN_FORM
+          value: "false"
+        - name: OAUTH_AUTO_REDIRECT
+          value: "true"
+        - name: OAUTH_CLIENT_ID
+          value: "openwebui"
+        - name: OAUTH_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: openwebui
+              key: OAUTH_CLIENT_SECRET
+        - name: OAUTH_MERGE_ACCOUNTS_BY_EMAIL
+          value: "true"
+        - name: OAUTH_PROVIDER_NAME
+          value: "Keycloak"
+        - name: OPENID_PROVIDER_URL
+          value: "https://auth.khazadum.net/realms/khazadum/.well-known/openid-configuration"
         resources:
           requests: { cpu: 100m, memory: 1Gi }
           limits: { memory: 2Gi }
