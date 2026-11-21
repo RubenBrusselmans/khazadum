@@ -132,7 +132,7 @@ spec:
           auth_url: https://auth.khazadum.net/realms/khazadum/protocol/openid-connect/auth
           token_url: https://auth.khazadum.net/realms/khazadum/protocol/openid-connect/token
           api_url: https://auth.khazadum.net/realms/khazadum/protocol/openid-connect/userinfo
-          role_attribute_path: "contains(roles[*], 'grafana-admin') && 'Admin' || 'Viewer'"
+          role_attribute_path: "contains(realm_access.roles[*], 'grafana-admin') && 'Admin' || 'Viewer'"
       resources:
         requests: { cpu: 100m, memory: 256Mi }
         limits: { memory: 1Gi }
