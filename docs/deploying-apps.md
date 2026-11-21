@@ -11,6 +11,8 @@ Conventions that apply to every app:
 - Single-writer / hostPort apps need `strategy: Recreate` + `replicas: 1`
   (single node: `RollingUpdate` deadlocks two pods on one host port or one
   shared SQLite/TSDB file → new pod stays `Pending`).
+- Every app ships a `networkpolicy.yaml`: a default-deny ingress policy
+  plus an `allow-traefik-ingress` rule for the service's port(s).
 - Secrets go into `apps/<app>/secret.yaml`, encrypted. See
   [secrets.md](secrets.md).
 
@@ -23,6 +25,7 @@ Conventions that apply to every app:
    kind: Kustomization
    resources:
      - namespace.yaml
+     - networkpolicy.yaml
      - deployment.yaml
      - service.yaml
      - ingress.yaml

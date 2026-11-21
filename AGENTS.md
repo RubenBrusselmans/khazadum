@@ -164,6 +164,9 @@ Details: [docs/secrets.md](docs/secrets.md).
 - New image: `image: repo:tag@sha256:digest`; resolve the digest once with
   `docker buildx imagetools inspect <ref>`. Renovate picks it up
   automatically.
+- Every app and infra component ships a default-deny ingress
+  NetworkPolicy with a traefik allow rule, like
+  `apps/*/networkpolicy.yaml`.
 - Persistent data is hostPath at `/data/crypt/<app>/...`,
   `type: DirectoryOrCreate`.
 - Forgejo (app `git`) is Flux's own git source: if git is down, Flux can't

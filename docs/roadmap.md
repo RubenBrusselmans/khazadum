@@ -9,75 +9,16 @@ What is deliberately not on this list: backup coverage itself (restic
 covers all of `/data/crypt` with verification and retention), Flux
 failure alerting to Matrix, digest pinning and Renovate updates, and the
 CI setup. The audit found those in good shape; the one backup gap that
-remains is the failure alert, item 6 below. The remaining work is mostly
-about blast radius (what one bad pod can reach), honest rollouts, and
-wiring pieces together.
+remains is the failure alert, item 5 below. Network policies are off the
+list too: default-deny ingress is enforced in every namespace since
+2026-11-21 and new apps are expected to ship their own policy (see
+[deploying-apps.md](deploying-apps.md)). Egress filtering was evaluated
+and deliberately skipped — the maintenance cost outweighs the benefit
+for a single-operator cluster; LAN-side egress hardening can be
+revisited if the threat model changes. The remaining work is mostly
+about honest rollouts, fair scheduling, and wiring pieces together.
 
-## 1. Network policies
-
-Progress: default-deny ingress is live for nextcloud and keycloak
-(2026-11-21, ingress-only; egress lockdown is a separate later pass).
-Everything else is still open: any pod can open a connection to any
-service anywhere.
-
-Two corrections to the original audit wording, kept here so the threat
-model stays honest:
-
-- The nextcloud mariadb/redis and keycloak postgres are sidecars inside
-  their app's pod and have no Services of their own. Nothing can reach
-  them by DNS name; the only path is scanning the flat flannel pod
-  network for the DB port on the pod IP, which a default-deny policy
-  blocks. Intra-pod 127.0.0.1 traffic is unreachable from outside the
-  pod and is not filtered by NetworkPolicy at all — no rules needed for
-  the DB hop.
-- The woodpecker gRPC is reachable cluster-wide, but registering as an
-  agent requires the agent secret, so bare reachability is
-  DoS/exploit surface, not instant access. The real untrusted tenant is
-  the CI job pods in the woodpecker namespace (arbitrary build code).
-
-The east-west surface that actually matters for the remaining
-namespaces: the web Services (forgejo, woodpecker, grafana, prometheus,
-loki, the apps in the external gundabad repo), matrix-receiver (any pod
-can POST fake alerts into Matrix), and unrestricted egress everywhere.
-Note the gundabad apps live in the other repo, so covering them is a
-change there, not here.
-
-Enforcement is confirmed working: k3s runs the default flannel +
-embedded network-policy controller (no `--disable-network-policy`), and
-a 2026-11-21 functional check from a pod proved a flux-allowed port
-answers while a blocked port times out. The backup and flux-system
-default-deny policies have been enforcing since 2026-08.
-
-Next coverage, cheapest first: observability (matrix-receiver),
-woodpecker, git, then gundabad, then egress.
-
-Status update 2026-11-21: nextcloud, keycloak, observability and
-woodpecker are done (same shape: default-deny + traefik allow;
-observability also allows its own namespace port-agnostic for the scrape
-mesh, woodpecker allows same-ns to the server's gRPC 9000). git is done
-too: one allow policy lists its four legitimate clients on port 3000
-(traefik, flux-system, renovate, woodpecker). All verified live:
-ingress URLs answer, all 14 prometheus targets scrape, loki ingests
-alloy's logs, a woodpecker pipeline ran clean, and renovate's manual
-run succeeded. One upstream quirk surfaced: kube-router syncs its
-allow-set asynchronously, so a CI pod that fires its first registry
-request seconds after start can be rejected transiently; the kaniko
-permission check is now skipped in the pipeline (kaniko documents this
-exact flag for delayed network policies). Side finding from the same
-session: the woodpecker server restarted on a liveness probe failure
-right after a pipeline push, with `database is locked` SQLite errors —
-no resource limits on it yet, so item 3 below got more urgent.
-
-Remaining coverage: egress only. As of 2026-11-21 ingress is locked
-down in every namespace, including the gundabad apps and jellyfin
-(verified: all public hosts answer, pod-level probes show every
-protected namespace denying cross-namespace connections, the gundabad
-pod runs 10/10). No allow rule exists for anything to reach jellyfin
-except traefik — none of the external apps currently call it; if one
-gets wired up later, its namespace needs an explicit allow on 8096.
-All Kustomizations Ready.
-
-## 2. Health probes
+## 1. Health probes
 
 Only keycloak, wiki-js, nextcloud (one probe) and woodpecker have any.
 hermes, homepage, openwebui, jellyfin, git and ansible run with none.
@@ -93,7 +34,7 @@ then covers the wedged-after-startup case.
 Small job per app: an httpGet readinessProbe on the existing port, plus a
 livenessProbe where the process can deadlock.
 
-## 3. Resource requests and limits
+## 2. Resource requests and limits
 
 No container under `apps/` declares resource requests or limits, and the
 same goes for woodpecker, git and the backup CronJob; only the
@@ -108,7 +49,11 @@ openwebui) so scheduling uses realistic numbers. Add limits where a
 runaway is plausible: the nextcloud cron sidecar, openwebui. Don't
 bother with limits on the small static apps; requests are enough there.
 
-## 4. Keycloak has no clients
+The urgency is not theoretical: on 2026-11-21 the woodpecker server was
+restarted by its liveness probe right after a pipeline push, with
+`database is locked` SQLite errors and no limits to contain it.
+
+## 3. Keycloak has no clients
 
 Keycloak runs, it is built by CI with the khazadum theme, and nothing
 authenticates against it. No app manifest mentions OIDC or OAuth.
@@ -119,7 +64,7 @@ their local logins. Nextcloud works too but needs the OIDC user backend
 app. Each client also needs a realm, a client definition and a secret in
 git, following docs/keycloak.md and docs/secrets.md.
 
-## 5. Missing Recreate strategy
+## 4. Missing Recreate strategy
 
 homepage, hermes and openwebui are the only single-replica apps without
 `strategy: Recreate`. The other five apps have it, and so does every
@@ -134,7 +79,7 @@ both pods, that means two processes can share one SQLite file or config
 directory at once. This is the single-writer problem from the AGENTS.md
 rules, and it is a ten-minute fix per app.
 
-## 6. The backup failure alert never resolves
+## 5. The backup failure alert never resolves
 
 Backup failure alerting exists: the `BackupJobFailed` PrometheusRule in
 infrastructure/observability/kube-prometheus-stack/release.yaml pages
@@ -155,7 +100,7 @@ nightly, so this catches one missed night with margin). The Flux alert
 route does not help here: it only fires when the CronJob spec fails to
 reconcile, not when a healthy spec produces a failed run.
 
-## 7. TLS ends at the firewall
+## 6. TLS ends at the firewall
 
 Caddy on OPNsense terminates TLS for the khazadum.net domain and
 forwards plain HTTP to the cluster. Between OPNsense and Traefik, and
@@ -169,7 +114,7 @@ DNS challenge through OPNsense, or reuse the certs Caddy already
 fetches), then re-encrypt the Caddy to Traefik hop. Roughly a weekend,
 most of it testing the ingress chain.
 
-## 8. Small cleanups
+## 7. Small cleanups
 
 A few things to batch whenever an app is touched anyway:
 
@@ -177,9 +122,9 @@ A few things to batch whenever an app is touched anyway:
   root. Fine for a single-operator lab, worth tightening if the cluster
   ever grows a second tenant.
 - `privileged: true` on jellyfin and device-metrics-exporter is
-  load-bearing for GPU device access. Leave it alone until item 9.
+  load-bearing for GPU device access. Leave it alone until item 8.
 
-## 9. GPU device plugin
+## 8. GPU device plugin
 
 The proper fix for the privileged containers: an amdgpu device plugin
 DaemonSet (`rocm/k8s-device-plugin`) advertising `amd.com/gpu`, so
