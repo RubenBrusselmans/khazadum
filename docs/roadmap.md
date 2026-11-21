@@ -5,11 +5,13 @@ much cluster improvement they buy per hour of work. Items are removed once
 they are done, so everything here is still open. New findings get added at
 the bottom; the numbering only changes when an item is removed.
 
-What is deliberately not on this list: backups (restic covers all of
-`/data/crypt` with verification and retention), Flux failure alerting to
-Matrix, digest pinning and Renovate updates, and the CI setup. The audit
-found those in good shape. The remaining work is mostly about blast radius
-(what one bad pod can reach), honest rollouts, and wiring pieces together.
+What is deliberately not on this list: backup coverage itself (restic
+covers all of `/data/crypt` with verification and retention), Flux
+failure alerting to Matrix, digest pinning and Renovate updates, and the
+CI setup. The audit found those in good shape; the one backup gap that
+remains is the failure alert, item 6 below. The remaining work is mostly
+about blast radius (what one bad pod can reach), honest rollouts, and
+wiring pieces together.
 
 ## 1. Network policies
 
@@ -30,8 +32,8 @@ Roughly a day of work for the first two namespaces.
 
 ## 2. Health probes
 
-Only keycloak, wiki-js and nextcloud (one probe) have any. hermes,
-homepage, openwebui, jellyfin, git, woodpecker and ansible run with none.
+Only keycloak, wiki-js, nextcloud (one probe) and woodpecker have any.
+hermes, homepage, openwebui, jellyfin, git and ansible run with none.
 
 The Flux Kustomizations deploy with `wait: true`, so Flux reports an
 app as ready as soon as its pods start. Without a readinessProbe, a web
@@ -46,8 +48,10 @@ livenessProbe where the process can deadlock.
 
 ## 3. Resource requests and limits
 
-No container in the cluster declares resource requests or limits. On a
-single node that means the kubelet has no idea which workload matters.
+No container under `apps/` declares resource requests or limits, and the
+same goes for woodpecker, git and the backup CronJob; only the
+observability stack sets them. On a single node that means the kubelet
+has no idea which workload matters.
 One jellyfin transcode or a busy nextcloud cron run can push everything
 else aside, including Flux, renovate and the metrics stack, while all
 persistent data sits on a spinning disk that hates contention.
@@ -83,20 +87,26 @@ both pods, that means two processes can share one SQLite file or config
 directory at once. This is the single-writer problem from the AGENTS.md
 rules, and it is a ten-minute fix per app.
 
-## 6. Nothing alerts on backup failure
+## 6. The backup failure alert never resolves
 
-The restic CronJob in infrastructure/backup can fail three ways: rclone
-cannot reach Proton Drive, restic fails mid-run, or the later `restic
-check` finds corruption. All three are silent today. The Prometheus to
-Matrix plumbing already exists (kube-prometheus-stack routes to
-matrix-receiver), so what is missing is a PrometheusRule that catches a
-failed or long-overdue CronJob run and lets the existing route page it.
+Backup failure alerting exists: the `BackupJobFailed` PrometheusRule in
+infrastructure/observability/kube-prometheus-stack/release.yaml pages
+matrix-receiver, and since `restic check` runs inside the same CronJob,
+a non-zero exit covers all three failure modes (rclone cannot reach
+Proton Drive, restic fails mid-run, the check finds corruption).
 
-Watch `kube-state-metrics` job metrics for this, for example the
-`kube_job_status_succeeded` series of the backup job, or a staleness
-check on the last successful run. The Flux alert route does not help
-here: it only fires when the CronJob spec fails to reconcile, not when a
-healthy spec produces a failed run.
+The flaw is the expression. It fires on
+`kube_job_status_failed{namespace="backup"} > 0`, but failed Job objects
+linger in history (`failedJobsHistoryLimit: 3`), so one bad night keeps
+the gauge above zero forever: the alert re-pages every 12 hours and
+never resolves, even after the problem is fixed and later runs succeed.
+
+Replace it with a staleness check on the last successful run: alert when
+the newest backup job with `kube_job_status_succeeded == 1` has a
+`kube_job_status_completion_time` more than ~26 hours old (the job runs
+nightly, so this catches one missed night with margin). The Flux alert
+route does not help here: it only fires when the CronJob spec fails to
+reconcile, not when a healthy spec produces a failed run.
 
 ## 7. TLS ends at the firewall
 
