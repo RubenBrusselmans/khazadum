@@ -19,3 +19,5 @@ spec:
         - name: ansible
           image: quay.io/ansible/awx-ee:latest@sha256:eaab9b09f731e3561ee0d932123a9971c76095555520f71da7ff4f2d433b4c99
           command: ["sleep", "infinity"]
+          resources:
+            requests: { cpu: 10m, memory: 128Mi }

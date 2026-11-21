@@ -44,6 +44,8 @@ spec:
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS
               value: "khazadum.net"
+          resources:
+            requests: { cpu: 25m, memory: 200Mi }
           volumeMounts:
             - name: config
               mountPath: /app/config

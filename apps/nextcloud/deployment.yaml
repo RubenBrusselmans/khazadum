@@ -38,6 +38,8 @@ spec:
                 secretKeyRef:
                   name: nextcloud
                   key: MYSQL_PASSWORD
+          resources:
+            requests: { cpu: 50m, memory: 320Mi }
           volumeMounts:
             - name: mariadb-data
               mountPath: /var/lib/mysql
@@ -52,6 +54,8 @@ spec:
             - 512mb
             - --maxmemory-policy
             - allkeys-lru
+          resources:
+            requests: { cpu: 25m, memory: 64Mi }
           volumeMounts:
             - name: redis-data
               mountPath: /data
@@ -85,6 +89,8 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 10
+          resources:
+            requests: { cpu: 250m, memory: 1Gi }
           volumeMounts:
             - name: nextcloud-config
               mountPath: /var/www/html
@@ -97,6 +103,9 @@ spec:
         - name: cron
           image: docker.io/library/nextcloud:35.0.3@sha256:f22d1dd63844bd15bbf6c2019149653c3d1c775ba48b173b56c3c6ad5f386196
           command: ["/cron.sh"]
+          resources:
+            requests: { cpu: 50m, memory: 64Mi }
+            limits: { memory: 640Mi }
           volumeMounts:
             - name: nextcloud-config
               mountPath: /var/www/html
@@ -144,6 +153,8 @@ spec:
                   key: MYSQL_PASSWORD
             - name: MYSQL_PWD
               value: "$(MYSQL_PASSWORD)"
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
           volumeMounts:
             - name: dumps
               mountPath: /dumps

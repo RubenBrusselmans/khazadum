@@ -26,6 +26,8 @@ spec:
               command: ["/bin/sh", "-c"]
               args:
                 - cp /secret/rclone.conf /config/rclone.conf
+              resources:
+                requests: { cpu: 10m, memory: 16Mi }
               volumeMounts:
                 - name: rclone-secret
                   mountPath: /secret
@@ -71,6 +73,8 @@ spec:
                     secretKeyRef:
                       name: backup
                       key: RC_PASS
+              resources:
+                requests: { cpu: 500m, memory: 1.5Gi }
               volumeMounts:
                 - name: rclone-config
                   mountPath: /config
@@ -132,6 +136,8 @@ spec:
                     secretKeyRef:
                       name: backup
                       key: RESTIC_PASSWORD
+              resources:
+                requests: { cpu: 250m, memory: 640Mi }
               volumeMounts:
                 - name: rclone-config
                   mountPath: /config

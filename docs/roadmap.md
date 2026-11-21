@@ -9,7 +9,7 @@ What is deliberately not on this list: backup coverage itself (restic
 covers all of `/data/crypt` with verification and retention), Flux
 failure alerting to Matrix, digest pinning and Renovate updates, and the
 CI setup. The audit found those in good shape; the one backup gap that
-remains is the failure alert, item 3 below. Network policies are off the
+remains is the failure alert, item 2 below. Network policies are off the
 list too: default-deny ingress is enforced in every namespace since
 2026-11-21 and new apps are expected to ship their own policy (see
 [deploying-apps.md](deploying-apps.md)). Egress filtering was evaluated
@@ -19,31 +19,15 @@ revisited if the threat model changes. Health probes went in on
 2026-11-21, and the Recreate strategy gap closed in the same pass.
 Deliberate exceptions: ansible is a `sleep infinity`
 toolbox with nothing to probe, nextcloud gets no liveness (an httpGet
-would restart the pod while maintenance mode is on), and the Forgejo
-deployment lives in the external gundabad repo, so its probes are a
-follow-up there. The remaining work is mostly about fair scheduling and
+would restart the pod while maintenance mode is on). Resource requests
+and limits landed on 2026-11-21 too, sized from two weeks of Prometheus
+history (memory request ≈ 14-day p95, CPU requests as fairness weights,
+memory limits only on the nextcloud cron sidecar, openwebui and
+woodpecker-server); [deploying-apps.md](deploying-apps.md) now requires
+requests on every new container. The remaining work is mostly about
 wiring pieces together.
 
-## 1. Resource requests and limits
-
-No container under `apps/` declares resource requests or limits, and the
-same goes for woodpecker, git and the backup CronJob; only the
-observability stack sets them. On a single node that means the kubelet
-has no idea which workload matters.
-One jellyfin transcode or a busy nextcloud cron run can push everything
-else aside, including Flux, renovate and the metrics stack, while all
-persistent data sits on a spinning disk that hates contention.
-
-Start with requests on the heavy apps (jellyfin, nextcloud, keycloak,
-openwebui) so scheduling uses realistic numbers. Add limits where a
-runaway is plausible: the nextcloud cron sidecar, openwebui. Don't
-bother with limits on the small static apps; requests are enough there.
-
-The urgency is not theoretical: on 2026-11-21 the woodpecker server was
-restarted by its liveness probe right after a pipeline push, with
-`database is locked` SQLite errors and no limits to contain it.
-
-## 2. Keycloak has no clients
+## 1. Keycloak has no clients
 
 Keycloak runs, it is built by CI with the khazadum theme, and nothing
 authenticates against it. No app manifest mentions OIDC or OAuth.
@@ -54,7 +38,7 @@ their local logins. Nextcloud works too but needs the OIDC user backend
 app. Each client also needs a realm, a client definition and a secret in
 git, following docs/keycloak.md and docs/secrets.md.
 
-## 3. The backup failure alert never resolves
+## 2. The backup failure alert never resolves
 
 Backup failure alerting exists: the `BackupJobFailed` PrometheusRule in
 infrastructure/observability/kube-prometheus-stack/release.yaml pages
@@ -75,7 +59,7 @@ nightly, so this catches one missed night with margin). The Flux alert
 route does not help here: it only fires when the CronJob spec fails to
 reconcile, not when a healthy spec produces a failed run.
 
-## 4. TLS ends at the firewall
+## 3. TLS ends at the firewall
 
 Caddy on OPNsense terminates TLS for the khazadum.net domain and
 forwards plain HTTP to the cluster. Between OPNsense and Traefik, and
@@ -89,7 +73,7 @@ DNS challenge through OPNsense, or reuse the certs Caddy already
 fetches), then re-encrypt the Caddy to Traefik hop. Roughly a weekend,
 most of it testing the ingress chain.
 
-## 5. Small cleanups
+## 4. Small cleanups
 
 A few things to batch whenever an app is touched anyway:
 
@@ -97,9 +81,9 @@ A few things to batch whenever an app is touched anyway:
   root. Fine for a single-operator lab, worth tightening if the cluster
   ever grows a second tenant.
 - `privileged: true` on jellyfin and device-metrics-exporter is
-  load-bearing for GPU device access. Leave it alone until item 6.
+  load-bearing for GPU device access. Leave it alone until item 5.
 
-## 6. GPU device plugin
+## 5. GPU device plugin
 
 The proper fix for the privileged containers: an amdgpu device plugin
 DaemonSet (`rocm/k8s-device-plugin`) advertising `amd.com/gpu`, so

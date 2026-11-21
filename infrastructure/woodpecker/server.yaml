@@ -61,6 +61,9 @@ spec:
           httpGet:
             path: /healthz
             port: 8000
+        resources:
+          requests: { cpu: 25m, memory: 64Mi }
+          limits: { memory: 512Mi }
         volumeMounts:
         - name: server-data
           mountPath: /var/lib/woodpecker

@@ -40,6 +40,8 @@ spec:
           env:
             - name: HERMES_DASHBOARD
               value: "1"
+          resources:
+            requests: { cpu: 500m, memory: 1.25Gi }
           volumeMounts:
             - name: hermes
               mountPath: /opt/data

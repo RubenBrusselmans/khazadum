@@ -41,6 +41,8 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 30
+          resources:
+            requests: { cpu: 25m, memory: 64Mi }
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
@@ -93,6 +95,8 @@ spec:
             periodSeconds: 30
             timeoutSeconds: 5
             failureThreshold: 5
+          resources:
+            requests: { cpu: 100m, memory: 1Gi }
       volumes:
         - name: postgres-data
           hostPath:

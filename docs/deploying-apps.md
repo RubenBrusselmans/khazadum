@@ -11,6 +11,10 @@ Conventions that apply to every app:
 - Single-writer / hostPort apps need `strategy: Recreate` + `replicas: 1`
   (single node: `RollingUpdate` deadlocks two pods on one host port or one
   shared SQLite/TSDB file → new pod stays `Pending`).
+- Every container declares resource requests (sized from Prometheus history:
+  memory ≈ 14-day p95, CPU = a fairness weight, no CPU limits). Memory
+  limits only where a runaway is plausible. Never leave a container without
+  requests — BestEffort pods are evicted first under memory pressure.
 - Every app ships a `networkpolicy.yaml`: a default-deny ingress policy
   plus an `allow-traefik-ingress` rule for the service's port(s).
 - Secrets go into `apps/<app>/secret.yaml`, encrypted. See

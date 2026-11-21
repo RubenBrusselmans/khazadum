@@ -38,6 +38,9 @@ spec:
         env:
         - name: ENABLE_ADMIN_CHAT_ACCESS
           value: "false"
+        resources:
+          requests: { cpu: 100m, memory: 1Gi }
+          limits: { memory: 2Gi }
         volumeMounts:
         - name: openwebui-data
           mountPath: /app/backend/data

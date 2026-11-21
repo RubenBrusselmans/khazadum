@@ -48,6 +48,8 @@ spec:
               port: 3000
             initialDelaySeconds: 60
             periodSeconds: 30
+          resources:
+            requests: { cpu: 50m, memory: 640Mi }
         - name: postgres
           image: docker.io/library/postgres:18-alpine@sha256:ff64c9e3bdf8e2120107d3559de8db314e8305f7e38c5105903c6295876738ff
           env:
@@ -82,6 +84,8 @@ spec:
                 - wiki
             initialDelaySeconds: 30
             periodSeconds: 30
+          resources:
+            requests: { cpu: 25m, memory: 80Mi }
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
