@@ -5,40 +5,7 @@ much cluster improvement they buy per hour of work. Items are removed once
 they are done, so everything here is still open. New findings get added at
 the bottom; the numbering only changes when an item is removed.
 
-What is deliberately not on this list: backup coverage itself (restic
-covers all of `/data/crypt` with verification and retention), Flux
-failure alerting to Matrix, digest pinning and Renovate updates, and the
-CI setup. The audit found those in good shape; the one backup gap that
-remains is the failure alert, item 2 below. Network policies are off the
-list too: default-deny ingress is enforced in every namespace since
-2026-11-21 and new apps are expected to ship their own policy (see
-[deploying-apps.md](deploying-apps.md)). Egress filtering was evaluated
-and deliberately skipped — the maintenance cost outweighs the benefit
-for a single-operator cluster; LAN-side egress hardening can be
-revisited if the threat model changes. Health probes went in on
-2026-11-21, and the Recreate strategy gap closed in the same pass.
-Deliberate exceptions: ansible is a `sleep infinity`
-toolbox with nothing to probe, nextcloud gets no liveness (an httpGet
-would restart the pod while maintenance mode is on). Resource requests
-and limits landed on 2026-11-21 too, sized from two weeks of Prometheus
-history (memory request ≈ 14-day p95, CPU requests as fairness weights,
-memory limits only on the nextcloud cron sidecar, openwebui and
-woodpecker-server); [deploying-apps.md](deploying-apps.md) now requires
-requests on every new container. The remaining work is mostly about
-wiring pieces together.
-
-## 1. Keycloak has no clients
-
-Keycloak runs, it is built by CI with the khazadum theme, and nothing
-authenticates against it. No app manifest mentions OIDC or OAuth.
-
-Either give it clients or question why it runs at all. The easy wins are
-wiki-js and Grafana: both support OIDC out of the box and would replace
-their local logins. Nextcloud works too but needs the OIDC user backend
-app. Each client also needs a realm, a client definition and a secret in
-git, following docs/keycloak.md and docs/secrets.md.
-
-## 2. The backup failure alert never resolves
+## 1. The backup failure alert never resolves
 
 Backup failure alerting exists: the `BackupJobFailed` PrometheusRule in
 infrastructure/observability/kube-prometheus-stack/release.yaml pages
@@ -59,7 +26,7 @@ nightly, so this catches one missed night with margin). The Flux alert
 route does not help here: it only fires when the CronJob spec fails to
 reconcile, not when a healthy spec produces a failed run.
 
-## 3. TLS ends at the firewall
+## 2. TLS ends at the firewall
 
 Caddy on OPNsense terminates TLS for the khazadum.net domain and
 forwards plain HTTP to the cluster. Between OPNsense and Traefik, and
@@ -73,7 +40,7 @@ DNS challenge through OPNsense, or reuse the certs Caddy already
 fetches), then re-encrypt the Caddy to Traefik hop. Roughly a weekend,
 most of it testing the ingress chain.
 
-## 4. Small cleanups
+## 3. Small cleanups
 
 A few things to batch whenever an app is touched anyway:
 
@@ -81,9 +48,9 @@ A few things to batch whenever an app is touched anyway:
   root. Fine for a single-operator lab, worth tightening if the cluster
   ever grows a second tenant.
 - `privileged: true` on jellyfin and device-metrics-exporter is
-  load-bearing for GPU device access. Leave it alone until item 5.
+  load-bearing for GPU device access. Leave it alone until item 4.
 
-## 5. GPU device plugin
+## 4. GPU device plugin
 
 The proper fix for the privileged containers: an amdgpu device plugin
 DaemonSet (`rocm/k8s-device-plugin`) advertising `amd.com/gpu`, so
