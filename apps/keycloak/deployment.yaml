@@ -47,7 +47,7 @@ spec:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
         - name: keycloak
-          image: git.khazadum.net/ruben/keycloak-khazadum:latest@sha256:21efa6998c8c64f5b0f537df558718f97d2f66fa452c7660c6b6092f02b17a0b
+          image: git.khazadum.net/ruben/keycloak-khazadum:latest@sha256:e2ea4a463fe07344e8e02aaf917f8b9b38a04f441a5728fae8105d32a544ebb1
           command: ["/opt/keycloak/bin/kc.sh", "start", "--optimized"]
           env:
             - name: KC_HOSTNAME
