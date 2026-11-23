@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: wiki-js
-          image: docker.io/requarks/wiki:3@sha256:3de0495234db06fc3ad78b8a6dc71ff297b55ed0d3b37d61eb0fbfe767f6e5b6
+          image: docker.io/requarks/wiki:3@sha256:85be143b4f550bc616c25137e5ceaf4070a2ce64cb4bb3c575e2c9eddeeb0d1d
           env:
             - name: DB_HOST
               value: "127.0.0.1"
