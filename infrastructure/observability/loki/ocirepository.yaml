@@ -11,8 +11,8 @@ spec:
   interval: 10m
   url: oci://ghcr.io/grafana/helm-charts/loki
   ref:
-    tag: 7.6.0
-    digest: sha256:ff9d8a3a4b01fdacd1ccc1132bf8f1ed79b255612b526b9abce4a68b7349080a
+    tag: 7.7.0
+    digest: sha256:8d708161a019689e331fd04769e2b4232d01fbb7f627551bd63d6b89438a3aba
   # https://fluxcd.io/flux/components/source/ocirepositories/#layer-selector
   # pick the layer by type, not by position, to prevent same breakage of KPS
   layerSelector:
