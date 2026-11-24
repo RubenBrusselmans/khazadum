@@ -4,3 +4,12 @@ resources:
   - flux-system
   - apps
   - infrastructure
+# Ignore kubectl rollout restart's restartedAt annotation on every Kustomization, so Flux doesn't roll pods a second time.
+patches:
+  - patch: |-
+      - op: add
+        path: /spec/ignore
+        value: |-
+          /spec/template/metadata/annotations/kubectl.kubernetes.io~1restartedAt
+    target:
+      kind: Kustomization
