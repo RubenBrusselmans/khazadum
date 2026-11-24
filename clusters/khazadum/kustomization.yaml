@@ -10,6 +10,7 @@ patches:
       - op: add
         path: /spec/ignore
         value:
-          - /spec/template/metadata/annotations/kubectl.kubernetes.io~1restartedAt
+          - paths:
+              - /spec/template/metadata/annotations/kubectl.kubernetes.io~1restartedAt
     target:
       kind: Kustomization
