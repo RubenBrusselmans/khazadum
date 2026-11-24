@@ -14,4 +14,7 @@ data:
       gitAuthor: 'Renovate Bot <renovate@khazadum.net>',
       timezone: 'Europe/Brussels',
       onboarding: true,
+      hostRules: [
+        { matchHost: 'http://git.git.svc.cluster.local:3000', allowInternal: true },
+      ],
     };
