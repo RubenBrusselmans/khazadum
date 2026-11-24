@@ -31,3 +31,26 @@ spec:
       ports:
         - port: 9119
           protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-openwebui-api
+  namespace: hermes
+spec:
+  podSelector:
+    matchLabels:
+      app: hermes
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openwebui
+          podSelector:
+            matchLabels:
+              app: openwebui
+      ports:
+        - port: 8642
+          protocol: TCP
