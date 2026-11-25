@@ -44,7 +44,7 @@ spec:
             - name: mariadb-data
               mountPath: /var/lib/mysql
         - name: redis
-          image: docker.io/library/redis:alpine@sha256:7958cfbb9d152f87dadfbc89f1b0b15938f0b81ff8982feb327476f4911935c3
+          image: docker.io/library/redis:alpine@sha256:5af80107c1eeecb484a2269b80a26d12bfa6521787da4663bd9f19f60a163483
           args:
             - --appendonly
             - "yes"
@@ -60,7 +60,7 @@ spec:
             - name: redis-data
               mountPath: /data
         - name: nextcloud
-          image: docker.io/library/nextcloud:35.0.3@sha256:f22d1dd63844bd15bbf6c2019149653c3d1c775ba48b173b56c3c6ad5f386196
+          image: docker.io/library/nextcloud:35.0.3@sha256:f44180601f18e7664557232b4c5edb0eb4a82d649c05b93313f4e15909553d42
           env:
             - name: MYSQL_DATABASE
               value: "nextcloud"
@@ -101,7 +101,7 @@ spec:
               subPath: zz-session-override.ini
               readOnly: true
         - name: cron
-          image: docker.io/library/nextcloud:35.0.3@sha256:f22d1dd63844bd15bbf6c2019149653c3d1c775ba48b173b56c3c6ad5f386196
+          image: docker.io/library/nextcloud:35.0.3@sha256:f44180601f18e7664557232b4c5edb0eb4a82d649c05b93313f4e15909553d42
           command: ["/cron.sh"]
           resources:
             requests: { cpu: 50m, memory: 64Mi }
