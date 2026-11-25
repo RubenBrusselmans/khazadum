@@ -17,12 +17,35 @@ spec:
   values:
     controller:
       type: daemonset # one pod per node
+      volumes:
+        extra:
+          # journald writes live entries here before the flush moves them
+          - name: run-journal
+            hostPath:
+              path: /run/log/journal
+          # identifies which journal dir belongs to this host
+          - name: machine-id
+            hostPath:
+              path: /etc/machine-id
+              type: File
 
     alloy:
       # mount /var/log so alloy can tail pod logs
       # k3s uses containerd: /var/log/pods/ & /var/log/containers/
+      # /var/log/journal (persistent journald) rides along on this mount
       mounts:
         varlog: true
+        extra:
+          - name: run-journal
+            mountPath: /run/log/journal
+            readOnly: true
+          - name: machine-id
+            mountPath: /etc/machine-id
+            readOnly: true
+      # journal files are root:systemd-journal, gid 62 on NixOS
+      securityContext:
+        supplementalGroups:
+          - 62
       # only collect logs: discover pods, tail their logs, push to loki
       # metrics done by kube-prometheus-stack
       configMap:
@@ -35,6 +58,11 @@ spec:
           // tail logs from every discovered pod
           loki.source.kubernetes "all_pods" {
             targets    = discovery.kubernetes.pods.targets
+            forward_to = [loki.write.loki.receiver]
+          }
+
+          // host journald: systemd units + kernel
+          local.journal "host" {
             forward_to = [loki.write.loki.receiver]
           }
 
