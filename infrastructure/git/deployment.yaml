@@ -24,7 +24,7 @@ spec:
         - name: FORGEJO__server__DOMAIN
           value: "git.khazadum.net"
         - name: FORGEJO__server__ROOT_URL
-          value: "http://git.khazadum.net/"
+          value: "https://git.khazadum.net/"
         - name: FORGEJO__server__START_SSH_SERVER
           value: "false"
         - name: FORGEJO__server__LANDING_PAGE

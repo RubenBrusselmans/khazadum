@@ -43,6 +43,15 @@ Import the file (System → Trust → Authorities), then set Caddy's upstreams
 to `https://tower.khazadum.net` with that authority selected for
 verification.
 
+## Migrating a vhost to the https hop (OPNsense Caddy plugin)
+
+- Upstream `https://tower.khazadum.net`: a hostname upstream makes TLS SNI
+  and the verification name match the wildcard cert.
+- Upstream verification: trust pool = imported root; skip-verify off.
+- Headers: add `header_up` / `Host` / `{hostport}`. Caddy >= 2.11 rewrites
+  Host to the upstream address for https upstreams; without this Traefik
+  finds no matching router and returns 404.
+
 ## Verify
 
 ```sh
