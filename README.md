@@ -20,6 +20,7 @@ The GitHub repository is a read-only mirror. This project is self-hosted with [F
 - Git: [Forgejo](https://forgejo.org/)
 - CI: [Woodpecker](https://woodpecker-ci.org/)
 - CD: [Flux CD](https://fluxcd.io)
+- Certificates: [cert-manager](https://cert-manager.io/)
 - Secrets: [SOPS](https://getsops.io/) + [age](https://github.com/FiloSottile/age)
 - Monitoring: [kube-prometheus-stack](https://github.com/prometheus-operator/kube-prometheus)
 - Logging: [Loki](https://grafana.com/oss/loki/) + [Alloy](https://grafana.com/oss/alloy-opentelemetry-collector/)

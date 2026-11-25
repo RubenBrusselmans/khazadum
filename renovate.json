@@ -13,7 +13,7 @@
     ]
   },
   "flux": {
-    "managerFilePatterns": ["/^infrastructure/observability/.+\\.ya?ml$/"]
+    "managerFilePatterns": ["/^infrastructure/.+\\.ya?ml$/"]
   },
   "packageRules": [
     {

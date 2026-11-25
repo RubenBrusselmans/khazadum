@@ -17,11 +17,9 @@ OPNsense provides:
 - ACME client
 - IDS/IPS ([Suricata](https://suricata.io/))
 
-Right now, Caddy terminates TLS and forwards the request over plain HTTP to
-K3s (with Traefik as ingress controller). So encryption currently ends at the
-firewall. Traffic between OPNsense and the cluster itself is plain HTTP. This
-traffic never leaves the node, but the plan is to enable TLS on Traefik as
-well and re-encrypt traffic between the firewall and the cluster.
+Caddy terminates the public TLS (Let's Encrypt, via its ACME client) and then
+re-encrypts: it forwards to Traefik over HTTPS, so traffic between OPNsense
+and the cluster is always encrypted.
 
 ## GitOps & Flux
 

@@ -7,3 +7,4 @@ resources:
   - notifications.yaml
   - renovate.yaml
   - woodpecker.yaml
+  - cert-manager.yaml
