@@ -8,3 +8,4 @@ resources:
   - renovate.yaml
   - woodpecker.yaml
   - cert-manager.yaml
+  - pki.yaml

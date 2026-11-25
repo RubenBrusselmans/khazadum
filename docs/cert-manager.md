@@ -9,7 +9,10 @@ services outside the cluster are not signed by it.
 
 ## Objects
 
-All in `infrastructure/cert-manager/`:
+Controller in `infrastructure/cert-manager/`, issuers and Traefik TLS in
+`infrastructure/pki/` — a second Flux Kustomization that depends on
+cert-manager being Ready, because the pki objects need the CRDs from the
+cert-manager chart to exist before they can apply.
 
 - ClusterIssuers `k3s-khazadum-root` (selfSigned) and `k3s-khazadum-ca` (ca).
 - Root CA Certificate `k3s-khazadum-root-ca`: 10y, RSA-4096,

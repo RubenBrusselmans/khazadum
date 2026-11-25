@@ -4,5 +4,3 @@ resources:
   - namespace.yaml
   - ocirepository.yaml
   - release.yaml
-  - issuers.yaml
-  - traefik-tls.yaml
