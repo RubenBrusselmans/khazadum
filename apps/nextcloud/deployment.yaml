@@ -15,9 +15,18 @@ spec:
       labels:
         app: nextcloud
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: mariadb
           image: docker.io/library/mariadb:11.8.9@sha256:e1d5495f445654134f226f55a41ce0da227116f6f27f283101f405c794d841fc
+          securityContext:
+            runAsUser: 999
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           args:
             - --transaction-isolation=READ-COMMITTED
             - --log-bin=binlog
@@ -45,6 +54,12 @@ spec:
               mountPath: /var/lib/mysql
         - name: redis
           image: docker.io/library/redis:alpine@sha256:5af80107c1eeecb484a2269b80a26d12bfa6521787da4663bd9f19f60a163483
+          securityContext:
+            runAsUser: 999
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           args:
             - --appendonly
             - "yes"
@@ -61,6 +76,10 @@ spec:
               mountPath: /data
         - name: nextcloud
           image: docker.io/library/nextcloud:35.0.3@sha256:f44180601f18e7664557232b4c5edb0eb4a82d649c05b93313f4e15909553d42
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           env:
             - name: MYSQL_DATABASE
               value: "nextcloud"
@@ -103,6 +122,10 @@ spec:
         - name: cron
           image: docker.io/library/nextcloud:35.0.3@sha256:f44180601f18e7664557232b4c5edb0eb4a82d649c05b93313f4e15909553d42
           command: ["/cron.sh"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           resources:
             requests: { cpu: 50m, memory: 64Mi }
             limits: { memory: 640Mi }
@@ -113,6 +136,10 @@ spec:
           # dump at 02:30 (before the 03:00 backup)
           # gzip dumps under /data/crypt/nextcloud/dumps
           image: docker.io/library/mariadb:11.8.9@sha256:e1d5495f445654134f226f55a41ce0da227116f6f27f283101f405c794d841fc
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           command: ["/bin/sh", "-c"]
           args:
             - |

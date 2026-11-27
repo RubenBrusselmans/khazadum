@@ -15,9 +15,18 @@ spec:
       labels:
         app: keycloak
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: postgres
           image: docker.io/library/postgres:18.7@sha256:64c8b0d31e4ab6ea665e8426ea406a94bf52de3c05b3a4a8bf713704eefa9328
+          securityContext:
+            runAsUser: 999
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           env:
             - name: POSTGRES_DB
               value: "keycloak"
@@ -48,6 +57,10 @@ spec:
               mountPath: /var/lib/postgresql/data
         - name: keycloak
           image: git.khazadum.net/ruben/keycloak-khazadum:latest@sha256:e2ea4a463fe07344e8e02aaf917f8b9b38a04f441a5728fae8105d32a544ebb1
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           command: ["/opt/keycloak/bin/kc.sh", "start", "--optimized"]
           env:
             - name: KC_HOSTNAME

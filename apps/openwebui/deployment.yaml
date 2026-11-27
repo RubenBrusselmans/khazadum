@@ -15,9 +15,16 @@ spec:
       labels:
         app: openwebui
     spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: openwebui
         image: ghcr.io/open-webui/open-webui:main@sha256:ff7f7cbb4545aacec2c22d085b2bc406b299c119bd98747421124a1a6c03795f
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
         ports:
         - containerPort: 8080
         readinessProbe:
