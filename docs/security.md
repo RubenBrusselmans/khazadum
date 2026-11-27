@@ -52,12 +52,15 @@ Every raw-manifest container carries an explicit securityContext:
 `allowPrivilegeEscalation: false`, `capabilities: drop: [ALL]`, and a
 pod-level `seccompProfile: RuntimeDefault`. `runAsNonRoot` (with an
 explicit `runAsUser`) is declared only for images that already run as
-that uid — postgres (999), mariadb/redis (999), forgejo (1000),
-woodpecker (1000), awx-ee (1000), renovate (12021), matrix-receiver
-(nonroot). Root-default images (openwebui, keycloak, wiki, hermes,
-backup rclone/restic, homepage) keep their uid because their hostPath
-data dirs are root-owned; de-rooting them is on the
-[roadmap](roadmap.md).
+that uid — postgres (999), mariadb/redis (999), woodpecker (1000),
+awx-ee (1000), renovate (12021), matrix-receiver (nonroot). Root-default
+images (openwebui, keycloak, wiki, hermes, backup rclone/restic,
+homepage) keep their uid because their hostPath data dirs are
+root-owned; de-rooting them is on the [roadmap](roadmap.md). Forgejo
+carries no hardening at all: its image uses s6-overlay, which must run
+as root with full capabilities to supervise services and drop to the
+git user itself (a hardened attempt on 2026-11-27 crash-looped the
+pod: s6-svscan could not open its lock as non-root).
 
 Namespace PSA labels mirror this: `enforce: restricted` on ansible,
 cert-manager and renovate; explicit `enforce: privileged` on the
