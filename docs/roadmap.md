@@ -16,13 +16,15 @@ chown the host data dir to a fixed uid, set `runAsUser` + `runAsNonRoot`
 per container, one app at a time with rollout verification.
 
 Forgejo, the nextcloud app/cron containers, the wiki-js postgres,
-homepage, hermes and openwebui need a different route: they also
-require root with full capabilities (forgejo and hermes are s6-overlay
-images, nextcloud's entrypoint chowns and su's to www-data, wiki-js's
-PGDATA subdir is not 999-accessible, homepage and openwebui write into
-dirs a caps-stripped root cannot). Their hardening was reverted during
-the 2026-11-27 attempt after crash-loops. De-rooting means a rootless
-image variant and re-mapped data dir ownership.
+homepage, hermes, openwebui and backup's restic need a different
+route: they also require root with full capabilities (forgejo and
+hermes are s6-overlay images, nextcloud's entrypoint chowns and su's to
+www-data, wiki-js's PGDATA subdir is not 999-accessible, homepage and
+openwebui write into dirs a caps-stripped root cannot, restic must
+read restrictive-permission host files). Their hardening was reverted
+during the 2026-11-27 attempt after crash-loops or silent data skips.
+De-rooting means a rootless image variant and re-mapped data dir
+ownership.
 
 The bigger unlock is a storage-model change: migrating app data from
 hostPath to PVCs would lift the hostPath restriction and let most of

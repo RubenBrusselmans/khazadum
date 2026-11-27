@@ -79,9 +79,14 @@ capabilities break them at runtime:
 - openwebui: runs as root but its data dir is not writable by a
   caps-stripped root (sqlite cannot open its database file).
 
-keycloak's app container and the backup cronjob containers run as root
-and tolerate dropped capabilities; de-rooting the root-runtime apps is
-on the [roadmap](roadmap.md).
+- backup's restic container: it scans /data/crypt wholesale, and a
+  caps-stripped root cannot read host files with restrictive
+  permissions (silent skips, not failures). The seed-config and
+  rclone containers keep their hardening.
+
+keycloak's app container runs as root and tolerates dropped
+capabilities; de-rooting the root-runtime apps is on the
+[roadmap](roadmap.md).
 
 Namespace PSA labels mirror this: `enforce: restricted` on ansible,
 cert-manager and renovate; explicit `enforce: privileged` on the
