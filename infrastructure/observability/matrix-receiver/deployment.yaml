@@ -16,6 +16,7 @@ spec:
         app: matrix-receiver
     spec:
       securityContext:
+        runAsUser: 65532
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
