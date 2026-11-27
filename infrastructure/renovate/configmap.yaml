@@ -16,5 +16,6 @@ data:
       onboarding: true,
       hostRules: [
         { matchHost: 'http://git.git.svc.cluster.local:3000', allowInternal: true },
+        { matchHost: 'git.khazadum.net', allowInternal: true },
       ],
     };
