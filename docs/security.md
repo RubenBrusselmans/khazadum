@@ -74,10 +74,14 @@ capabilities break them at runtime:
 - homepage: the image copies a skeleton config into /app/config on
   start, which a caps-stripped root cannot write (EACCES without
   CAP_DAC_OVERRIDE).
+- hermes: s6-overlay image like forgejo; its fix-attrs service needs
+  root capabilities and s6 tears the service tree down without them.
+- openwebui: runs as root but its data dir is not writable by a
+  caps-stripped root (sqlite cannot open its database file).
 
-openwebui, keycloak, hermes and the backup containers run as root but
-tolerate dropped capabilities; de-rooting them is on the
-[roadmap](roadmap.md).
+keycloak's app container and the backup cronjob containers run as root
+and tolerate dropped capabilities; de-rooting the root-runtime apps is
+on the [roadmap](roadmap.md).
 
 Namespace PSA labels mirror this: `enforce: restricted` on ansible,
 cert-manager and renovate; explicit `enforce: privileged` on the

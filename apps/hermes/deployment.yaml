@@ -21,10 +21,6 @@ spec:
       containers:
         - name: hermes
           image: docker.io/nousresearch/hermes-agent:latest@sha256:ef0650d523ee1b5ab32c779acabc446d9936869a9932591553688a62bcf0c42f
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
           args: ["gateway", "run"]
           ports:
             - containerPort: 8642
