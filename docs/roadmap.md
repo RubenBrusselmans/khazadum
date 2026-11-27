@@ -5,17 +5,7 @@ much cluster improvement they buy per hour of work. Items are removed once
 they are done, so everything here is still open. New findings get added at
 the bottom; the numbering only changes when an item is removed.
 
-## 1. GPU device plugin
-
-The proper fix for the privileged containers: an amdgpu device plugin
-DaemonSet (`rocm/k8s-device-plugin`) advertising `amd.com/gpu`, so
-jellyfin and device-metrics-exporter request the resource and drop
-`privileged` for good. This replaces the piecemeal workarounds
-documented in docs/jellyfin.md. Larger job, and partly dependent on what
-upstream ships, but it is the prerequisite for hardening the GPU
-workloads, so it sits first.
-
-## 2. Pod security hardening, one namespace at a time
+## 1. Pod security hardening, one namespace at a time
 
 Take each workload to the strongest PodSecurity level it tolerates:
 restricted where possible, baseline otherwise, privileged where hostPath
@@ -42,4 +32,5 @@ watch the rollout; a label change alone never restarts running pods.
   so its batch is the label alone. Known wrinkles: awx-ee only sleeps;
   renovate's cronjob needs a writable cache dir when non-root.
 - `privileged: true` on jellyfin and device-metrics-exporter is
-  load-bearing for GPU device access. Leave it alone until item 1.
+  load-bearing for GPU device access and accepted by decision; the
+  device-plugin route was considered and rejected. See docs/security.md.

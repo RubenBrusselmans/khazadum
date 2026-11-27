@@ -28,6 +28,7 @@ human readers, `docs/` holds the documentation.
 - [keycloak.md](docs/keycloak.md) — Keycloak: CI-built themed image, update chain
 - [jellyfin.md](docs/jellyfin.md) — Jellyfin: why `privileged: true` can't be dropped, GPU device access
 - [cert-manager.md](docs/cert-manager.md) — internal PKI: k3s-only root CA, Traefik wildcard cert, OPNsense trust import
+- [security.md](docs/security.md) — security decisions: threat model, privileged GPU pods accepted, NetworkPolicy coverage
 - [roadmap.md](docs/roadmap.md) — improvement backlog from the 2026-11-20 audit: what's next for the cluster
 
 ## Hard safety rules
@@ -143,9 +144,10 @@ Details: [docs/secrets.md](docs/secrets.md).
   `kubectl -n renovate create job renovate-manual --from=cronjob/renovate`.
 - A broken rollout flips its KS not-Ready and alerts Matrix within minutes
   (`infrastructure/notifications/`). Verify after every push.
-- `privileged: true` on jellyfin and device-metrics-exporter is required
-  (removing it breaks GPU device access). Do not fix it piecemeal.
-  See [docs/jellyfin.md](docs/jellyfin.md).
+- `privileged: true` on jellyfin and device-metrics-exporter is
+  required (removing it breaks GPU device access) and accepted by
+  decision. Do not fix it piecemeal. See
+  [docs/security.md](docs/security.md).
 - The improvement backlog lives in [docs/roadmap.md](docs/roadmap.md)
   (audit 2026-11-20). Check it before proposing new work; remove entries
   when they are done.

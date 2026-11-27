@@ -23,14 +23,15 @@ devices-cgroup wall:
    needs root-writable `/etc/metrics`, `/var/log`, `/var/run`.
 3. Root + zero caps.
 
-The same applies to device-metrics-exporter (ROCm/GPU exporter, lives in the
-gundabad repo).
+The same applies to device-metrics-exporter (ROCm/GPU exporter, lives in
+this repo: `infrastructure/observability/device-metrics-exporter/`).
 
-Proper fix (roadmap): the amdgpu device plugin DaemonSet
-(`rocm/k8s-device-plugin`). A device plugin advertises the GPU as a
-schedulable resource (`amd.com/gpu`) and manages the device node access for
-pods that request the resource. Jellyfin and device-metrics-exporter then
-request it and drop `privileged` for good.
+The device-plugin route (`rocm/k8s-device-plugin` advertising
+`amd.com/gpu`) was considered and rejected: on a single exclusive GPU
+it would de-privilege at most one pod, and the exporter needs
+privileged `/dev/kfd` access for its metrics regardless. Both pods
+stay privileged by decision; the reasoning is in
+[security.md](security.md).
 
 ## Verification gotcha
 
