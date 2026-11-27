@@ -46,6 +46,29 @@ Revisit if untrusted tenants or workloads land here, if the GPU
 becomes partitionable or a second node adds one, or if the exporter
 drops the `/dev/kfd` metrics.
 
+## Pod hardening
+
+Every raw-manifest container carries an explicit securityContext:
+`allowPrivilegeEscalation: false`, `capabilities: drop: [ALL]`, and a
+pod-level `seccompProfile: RuntimeDefault`. `runAsNonRoot` (with an
+explicit `runAsUser`) is declared only for images that already run as
+that uid — postgres (999), mariadb/redis (999), forgejo (1000),
+woodpecker (1000), awx-ee (1000), renovate (12021), matrix-receiver
+(nonroot). Root-default images (openwebui, keycloak, wiki, hermes,
+backup rclone/restic, homepage) keep their uid because their hostPath
+data dirs are root-owned; de-rooting them is on the
+[roadmap](roadmap.md).
+
+Namespace PSA labels mirror this: `enforce: restricted` on ansible,
+cert-manager and renovate; explicit `enforce: privileged` on the
+hostPath-bound namespaces (backup, git, hermes, homepage, jellyfin,
+keycloak, nextcloud, observability, openwebui, wiki-js, woodpecker) —
+PSA baseline forbids hostPath volumes, so those cannot be lowered until
+data moves off hostPath. jellyfin and device-metrics-exporter also run
+`privileged: true` by decision (GPU device access, see below). The
+gundabad namespace is managed in the gundabad repo and is not labeled
+from here.
+
 ## Network policies
 
 Every raw-manifest namespace ships a default-deny ingress
