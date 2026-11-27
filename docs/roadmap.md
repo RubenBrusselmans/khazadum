@@ -15,10 +15,12 @@ capabilities dropped, seccomp), so the remaining step is a uid switch:
 chown the host data dir to a fixed uid, set `runAsUser` + `runAsNonRoot`
 per container, one app at a time with rollout verification.
 
-Forgejo needs a different route: its image runs s6-overlay, which
-requires root with full capabilities (hardened as 2026-11-27, it
-crash-looped). De-rooting means switching to the forgejo rootless image
-and remapping the data dir ownership.
+Forgejo and the nextcloud app/cron containers need a different route:
+they also require root with full capabilities (forgejo's s6-overlay
+supervision, nextcloud's entrypoint chowns and su's to www-data), so
+their hardening had to be reverted after the 2026-11-27 attempt
+crash-looped them. De-rooting means a rootless image variant and
+re-mapped data dir ownership.
 
 The bigger unlock is a storage-model change: migrating app data from
 hostPath to PVCs would lift the hostPath restriction and let most of

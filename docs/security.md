@@ -60,7 +60,11 @@ root-owned; de-rooting them is on the [roadmap](roadmap.md). Forgejo
 carries no hardening at all: its image uses s6-overlay, which must run
 as root with full capabilities to supervise services and drop to the
 git user itself (a hardened attempt on 2026-11-27 crash-looped the
-pod: s6-svscan could not open its lock as non-root).
+pod: s6-svscan could not open its lock as non-root). The nextcloud app
+and cron containers are in the same category: their entrypoint needs
+root with full capabilities (it creates lock files in www-data-owned
+dirs, chowns and drops to www-data via su), so their securityContext
+stays unset; mariadb, redis and db-dump keep their hardening.
 
 Namespace PSA labels mirror this: `enforce: restricted` on ansible,
 cert-manager and renovate; explicit `enforce: privileged` on the

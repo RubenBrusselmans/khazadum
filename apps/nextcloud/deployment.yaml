@@ -76,10 +76,6 @@ spec:
               mountPath: /data
         - name: nextcloud
           image: docker.io/library/nextcloud:35.0.3@sha256:f44180601f18e7664557232b4c5edb0eb4a82d649c05b93313f4e15909553d42
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
           env:
             - name: MYSQL_DATABASE
               value: "nextcloud"
@@ -122,10 +118,6 @@ spec:
         - name: cron
           image: docker.io/library/nextcloud:35.0.3@sha256:f44180601f18e7664557232b4c5edb0eb4a82d649c05b93313f4e15909553d42
           command: ["/cron.sh"]
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: ["ALL"]
           resources:
             requests: { cpu: 50m, memory: 64Mi }
             limits: { memory: 640Mi }
