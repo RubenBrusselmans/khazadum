@@ -48,23 +48,36 @@ drops the `/dev/kfd` metrics.
 
 ## Pod hardening
 
-Every raw-manifest container carries an explicit securityContext:
-`allowPrivilegeEscalation: false`, `capabilities: drop: [ALL]`, and a
-pod-level `seccompProfile: RuntimeDefault`. `runAsNonRoot` (with an
-explicit `runAsUser`) is declared only for images that already run as
-that uid — postgres (999), mariadb/redis (999), woodpecker (1000),
-awx-ee (1000), renovate (12021), matrix-receiver (nonroot). Root-default
-images (openwebui, keycloak, wiki, hermes, backup rclone/restic,
-homepage) keep their uid because their hostPath data dirs are
-root-owned; de-rooting them is on the [roadmap](roadmap.md). Forgejo
-carries no hardening at all: its image uses s6-overlay, which must run
-as root with full capabilities to supervise services and drop to the
-git user itself (a hardened attempt on 2026-11-27 crash-looped the
-pod: s6-svscan could not open its lock as non-root). The nextcloud app
-and cron containers are in the same category: their entrypoint needs
-root with full capabilities (it creates lock files in www-data-owned
-dirs, chowns and drops to www-data via su), so their securityContext
-stays unset; mariadb, redis and db-dump keep their hardening.
+Every raw-manifest container that tolerates it carries an explicit
+securityContext: `allowPrivilegeEscalation: false`,
+`capabilities: drop: [ALL]`, and a pod-level
+`seccompProfile: RuntimeDefault`. `runAsNonRoot` (with an explicit
+`runAsUser`) is declared only where the image already runs as that uid
+*and* its data dirs are that uid's: postgres in keycloak (999),
+mariadb/redis (999), woodpecker (1000), awx-ee (1000), renovate
+(12021), matrix-receiver (65532).
+
+Several images run as root *and* exercise root capabilities in their
+entrypoint, so they carry no container securityContext at all — dropped
+capabilities break them at runtime:
+
+- forgejo: s6-overlay supervision must run as root with full caps to
+  drop to the git user (hardened 2026-11-27, crash-looped: s6-svscan
+  could not open its lock as non-root).
+- nextcloud app and cron containers: the entrypoint creates lock files
+  in www-data-owned dirs and su's down to www-data; crond needs
+  CAP_SETGID. mariadb, redis and db-dump keep their hardening.
+- wiki-js postgres: its PGDATA subdir on the host is not 999-accessible
+  (unlike keycloak's, which the root entrypoint had chowned), so the
+  root entrypoint must manage ownership; the wiki container keeps its
+  hardening.
+- homepage: the image copies a skeleton config into /app/config on
+  start, which a caps-stripped root cannot write (EACCES without
+  CAP_DAC_OVERRIDE).
+
+openwebui, keycloak, hermes and the backup containers run as root but
+tolerate dropped capabilities; de-rooting them is on the
+[roadmap](roadmap.md).
 
 Namespace PSA labels mirror this: `enforce: restricted` on ansible,
 cert-manager and renovate; explicit `enforce: privileged` on the
