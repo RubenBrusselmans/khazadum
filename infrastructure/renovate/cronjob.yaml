@@ -20,9 +20,18 @@ spec:
             app: renovate
         spec:
           restartPolicy: Never
+          securityContext:
+            runAsUser: 12021
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
           containers:
             - name: renovate
               image: docker.io/renovate/renovate:44.264.1@sha256:7c6e6274efc81ba9c6c4e7a2124c40a3a04e88d3745a4d1e4c97cb0c6cd33820
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
               env:
                 - name: RENOVATE_CONFIG_FILE
                   value: /opt/renovate/config.js
