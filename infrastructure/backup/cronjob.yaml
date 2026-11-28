@@ -91,6 +91,11 @@ spec:
                   mountPath: /config
             - name: restic
               image: ghcr.io/restic/restic:latest@sha256:ccb3af1abb107769156f339823d746722eba67bed2d0590a775a566ae7fc2454
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop: ["ALL"]
+                  add: ["DAC_READ_SEARCH"]
               command: ["/bin/sh", "-c"]
               args:
                 - |
