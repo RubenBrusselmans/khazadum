@@ -78,6 +78,7 @@ spec:
           image: docker.io/library/nextcloud:35.0.3-fpm@sha256:d94f573f34403c0ffa4292a244d572a53cae17963c44078636e2e64ef234e75b
           securityContext:
             runAsUser: 33
+            runAsGroup: 33
             runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:
@@ -125,6 +126,7 @@ spec:
           command: ["nginx", "-g", "daemon off;"]
           securityContext:
             runAsUser: 33
+            runAsGroup: 33
             runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:
@@ -147,11 +149,12 @@ spec:
           args:
             - |
               while :; do
-                php -f /var/www/html/cron.php || :
+                php -f /var/www/html/cron.php || echo "cron.php failed rc=$?" >&2
                 sleep 300
               done
           securityContext:
             runAsUser: 33
+            runAsGroup: 33
             runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:
@@ -168,6 +171,7 @@ spec:
           image: docker.io/library/mariadb:11.8.9@sha256:e1d5495f445654134f226f55a41ce0da227116f6f27f283101f405c794d841fc
           securityContext:
             runAsUser: 999
+            runAsGroup: 999
             runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:

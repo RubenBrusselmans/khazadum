@@ -62,6 +62,11 @@ data:
         # prevent nginx http server detection
         server_tokens off;
 
+        # emit the well-known and /remote redirects exactly as written
+        # (relative): nginx would otherwise absolutize them against the
+        # internal listen port, leaking :8080 to clients
+        absolute_redirect off;
+
         # a directory containing index.php is served from it, anything
         # else falls through to the front-end controller
         index index.php index.html /index.php$request_uri;
