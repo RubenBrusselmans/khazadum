@@ -79,10 +79,17 @@ capabilities break them at runtime:
 - hermes: s6-overlay image like forgejo; its fix-attrs service needs
   root capabilities and s6 tears the service tree down without them.
 
-- backup's restic container: it scans /data/crypt wholesale, and a
-  caps-stripped root cannot read host files with restrictive
-  permissions (silent skips, not failures). The seed-config and
-  rclone containers keep their hardening.
+backup's restic container is the one deliberate root exception: it
+scans /data/crypt wholesale and must read every file — root-owned 0600
+files, other apps' 0700 data dirs (postgres 70/999) — and chowning the
+tree to one uid is not an option. It runs as root with
+`allowPrivilegeEscalation: false` and exactly one capability,
+`DAC_READ_SEARCH` (the read/search bypass; root without any DAC
+capability silently skips unreadable files, found live on
+2026-11-27). A host-level NixOS systemd redesign was considered and
+dropped on 2026-11-28: the same privilege model, at the cost of the
+in-cluster alerting and restore workflow. The seed-config and rclone
+containers keep their full hardening.
 
 De-rooting the remaining root-runtime apps (nextcloud, hermes) is
 tracked on the [roadmap](roadmap.md); backup's restic is a decision
