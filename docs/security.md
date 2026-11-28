@@ -55,9 +55,12 @@ securityContext: `allowPrivilegeEscalation: false`,
 `runAsUser`) is declared only where the image already runs as that uid
 *and* its data dirs are that uid's: postgres in keycloak (999),
 mariadb/redis (999), woodpecker (1000), awx-ee (1000), renovate
-(12021), matrix-receiver (65532), and the de-rooted app containers
+(12021), matrix-receiver (65532), the de-rooted app containers
 openwebui, homepage, wiki-js and keycloak (1000; host dirs chowned to
-1000 where they exist). openwebui additionally needs `WEBUI_SECRET_KEY`
+1000 where they exist), and the wiki-js postgres sidecar (70 — the
+alpine image's postgres user; the 2026-11-27 failure was
+`runAsUser: 999`, wrong for alpine, not a data-dir ownership problem).
+openwebui additionally needs `WEBUI_SECRET_KEY`
 set (SOPS secret) — its start.sh otherwise writes a secret file into
 the root-owned image workdir and dies as uid 1000.
 
@@ -71,9 +74,6 @@ capabilities break them at runtime:
 - nextcloud app and cron containers: the entrypoint creates lock files
   in www-data-owned dirs and su's down to www-data; crond needs
   CAP_SETGID. mariadb, redis and db-dump keep their hardening.
-- wiki-js postgres: its PGDATA subdir on the host is not 999-accessible
-  (unlike keycloak's, which the root entrypoint had chowned), so the
-  root entrypoint must manage ownership.
 
 - hermes: s6-overlay image like forgejo; its fix-attrs service needs
   root capabilities and s6 tears the service tree down without them.
@@ -83,9 +83,9 @@ capabilities break them at runtime:
   permissions (silent skips, not failures). The seed-config and
   rclone containers keep their hardening.
 
-De-rooting the remaining root-runtime apps (forgejo, nextcloud, the
-wiki-js postgres sidecar, hermes) is tracked on the
-[roadmap](roadmap.md); backup's restic is a decision item there.
+De-rooting the remaining root-runtime apps (forgejo, nextcloud,
+hermes) is tracked on the [roadmap](roadmap.md); backup's restic is a
+decision item there.
 
 Namespace PSA labels mirror this: `enforce: restricted` on ansible,
 cert-manager and renovate; explicit `enforce: privileged` on the

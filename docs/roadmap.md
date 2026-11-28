@@ -5,16 +5,7 @@ how much cluster improvement they buy per hour of work. Items are removed
 once they are done, so everything here is still open. New findings get
 added at the bottom; the numbering only changes when an item is removed.
 
-## 1. Run the wiki-js postgres as 999
-
-Keycloak's postgres runs as 999 and works; wiki-js's failed only
-because its PGDATA subdir (`/data/crypt/wiki-js/db/wiki`) is
-root-owned. Chown it to 999:999 on the node, then restore the
-`runAsUser: 999` + `runAsNonRoot` + caps-drop block that was reverted
-on 2026-11-27. After this, the whole wiki-js pod is non-root (the wiki
-app container was de-rooted on 2026-11-28).
-
-## 2. Switch forgejo to its rootless image
+## 1. Switch forgejo to its rootless image
 
 The rootful forgejo image is s6-overlay based and hardening broke it
 (2026-11-27, crash-loop). Forgejo publishes a `-rootless` variant that
@@ -23,14 +14,14 @@ for Renovate to pin), chown `/data/crypt/git` to 1000, re-add the
 caps-drop hardening. Biggest single win — the git KS is Flux's own
 source, so it deserves the fastest de-root on the cluster.
 
-## 3. Label the gundabad namespace
+## 2. Label the gundabad namespace
 
 The gundabad manifests (and its namespace) live in the external
 gundabad repo, so it was left out of the PSA labeling pass. Add the
 `pod-security.kubernetes.io/enforce` label there at the level its
 workloads pass, mirroring [security.md](security.md).
 
-## 4. Backup restic: accept root or move it off-cluster
+## 3. Backup restic: accept root or move it off-cluster
 
 restic must read every file under /data/crypt, including root-owned
 0600 files — a caps-stripped root silently skips them (found live in
@@ -39,7 +30,7 @@ option. Either document root with full caps as an accepted exception
 (like the GPU pods in [security.md](security.md)) or redesign the
 backup as a host-level systemd job outside k8s. Decide, then record it.
 
-## 5. Nextcloud de-root: research
+## 4. Nextcloud de-root: research
 
 The official image is root-orchestrated: the entrypoint chowns, creates
 lock files as root and su's down to www-data, and crond needs
@@ -48,14 +39,14 @@ entrypoint, or accepting root. Investigate what the nextcloud
 ecosystem (the `nextcloud/all-in-one` approach, community Helm charts)
 does before designing anything.
 
-## 6. Hermes de-root: research
+## 5. Hermes de-root: research
 
 The hermes-agent image is s6-overlay based with no published rootless
 variant. Options: request one upstream, build a wrapper image, or
 accept root. Low priority — single internal-facing workload, digests
 pinned, network default-deny.
 
-## 7. Migrate app data from hostPath to PVCs
+## 6. Migrate app data from hostPath to PVCs
 
 The storage-model change that lifts the hostPath blocker: PSA baseline
 forbids hostPath volumes, so the eleven `enforce: privileged`
