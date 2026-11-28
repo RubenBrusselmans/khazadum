@@ -29,5 +29,5 @@ spec:
             matchLabels:
               app.kubernetes.io/name: traefik
       ports:
-        - port: 80
+        - port: 8080
           protocol: TCP

@@ -7,7 +7,10 @@ data:
   zz-session-override.ini: |
     ; Stock image ships redis-session.ini with locking_enabled=1,
     ; lock_retries=-1 and no lock_expire (infinite hold): every parallel
-    ; request of one user serializes on the Redis session lock.
+    ; request of one user serializes on the Redis session lock. The
+    ; symptom was Nextcloud single-threaded per user.
+    session.save_handler = redis
+    session.save_path = "tcp://127.0.0.1:6379"
     redis.session.locking_enabled = 0
 
     ; nextcloud AIO image defaults.

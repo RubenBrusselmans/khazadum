@@ -75,7 +75,13 @@ spec:
             - name: redis-data
               mountPath: /data
         - name: nextcloud
-          image: docker.io/library/nextcloud:35.0.3@sha256:f44180601f18e7664557232b4c5edb0eb4a82d649c05b93313f4e15909553d42
+          image: docker.io/library/nextcloud:35.0.3-fpm@sha256:d94f573f34403c0ffa4292a244d572a53cae17963c44078636e2e64ef234e75b
+          securityContext:
+            runAsUser: 33
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           env:
             - name: MYSQL_DATABASE
               value: "nextcloud"
@@ -88,12 +94,10 @@ spec:
                   key: MYSQL_PASSWORD
             - name: MYSQL_HOST
               value: "127.0.0.1"
-            - name: REDIS_HOST
-              value: "127.0.0.1"
             - name: TZ
               value: "Europe/Brussels"
           ports:
-            - containerPort: 80
+            - containerPort: 9000
           readinessProbe:
             # check if in maintenance mode (in case of failed upgrade)
             exec:
@@ -115,9 +119,43 @@ spec:
               mountPath: /usr/local/etc/php/conf.d/zz-session-override.ini
               subPath: zz-session-override.ini
               readOnly: true
+        - name: nginx
+          image: docker.io/library/nginx:alpine@sha256:7fc0fb4af7bf006aeb31aea88069976060f8f0a0a86b667126742cc17f4e31ae
+          # the stock docker-entrypoint.d scripts assume root-owned paths
+          command: ["nginx", "-g", "daemon off;"]
+          securityContext:
+            runAsUser: 33
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          ports:
+            - containerPort: 8080
+          resources:
+            requests: { cpu: 25m, memory: 32Mi }
+          volumeMounts:
+            - name: nextcloud-config
+              mountPath: /var/www/html
+              readOnly: true
+            - name: nginx-conf
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+              readOnly: true
         - name: cron
-          image: docker.io/library/nextcloud:35.0.3@sha256:f44180601f18e7664557232b4c5edb0eb4a82d649c05b93313f4e15909553d42
-          command: ["/cron.sh"]
+          image: docker.io/library/nextcloud:35.0.3-fpm@sha256:d94f573f34403c0ffa4292a244d572a53cae17963c44078636e2e64ef234e75b
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              while :; do
+                php -f /var/www/html/cron.php || :
+                sleep 300
+              done
+          securityContext:
+            runAsUser: 33
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           resources:
             requests: { cpu: 50m, memory: 64Mi }
             limits: { memory: 640Mi }
@@ -129,6 +167,8 @@ spec:
           # gzip dumps under /data/crypt/nextcloud/dumps
           image: docker.io/library/mariadb:11.8.9@sha256:e1d5495f445654134f226f55a41ce0da227116f6f27f283101f405c794d841fc
           securityContext:
+            runAsUser: 999
+            runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
@@ -197,6 +237,9 @@ spec:
         - name: php-overrides
           configMap:
             name: nextcloud-php-overrides
+        - name: nginx-conf
+          configMap:
+            name: nextcloud-nginx
         - name: media
           hostPath:
             path: /data/crypt/media/media

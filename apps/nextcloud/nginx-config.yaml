@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nextcloud-nginx
+  namespace: nextcloud
+data:
+  # full nginx.conf replacing the image default: pid and temp paths
+  # under /tmp so it runs as uid 33, logs on stdout/stderr, and no
+  # conf.d include (the stock default.conf stays unused). Server block
+  # based on the official helm chart template (files/nginx.config.tpl)
+  # and the nextcloud nginx documentation.
+  nginx.conf: |
+    worker_processes auto;
+    error_log /dev/stderr notice;
+    pid /tmp/nginx.pid;
+
+    events {
+      worker_connections 1024;
+    }
+
+    http {
+      include /etc/nginx/mime.types;
+      default_type application/octet-stream;
+
+      access_log /dev/stdout;
+
+      sendfile on;
+      tcp_nopush on;
+      keepalive_timeout 65;
+
+      client_body_temp_path /tmp/client_temp;
+      proxy_temp_path /tmp/proxy_temp;
+      fastcgi_temp_path /tmp/fastcgi_temp;
+      uwsgi_temp_path /tmp/uwsgi_temp;
+      scgi_temp_path /tmp/scgi_temp;
+
+      # upload parity with the apache variant (1GiB request body cap;
+      # php upload_max_filesize 512M stays the effective limit)
+      client_max_body_size 1G;
+      client_body_buffer_size 512k;
+
+      # no add_header and no modHeadersAvailable here: nextcloud keeps
+      # sending its own security headers like it does under apache
+
+      # remove x-powered-by, which is an information leak
+      fastcgi_hide_header X-Powered-By;
+
+      # prevent nginx http server detection
+      server_tokens off;
+
+      # enable gzip but do not remove etag headers
+      gzip on;
+      gzip_vary on;
+      gzip_comp_level 4;
+      gzip_min_length 256;
+      gzip_proxied expired no-cache no-store private no_last_modified no_etag auth;
+      gzip_types application/atom+xml text/javascript application/javascript application/json application/ld+json application/manifest+json application/rss+xml application/vnd.geo+json application/vnd.ms-fontobject application/wasm application/x-font-ttf application/x-web-app-manifest+json application/xhtml+xml application/xml font/opentype image/bmp image/svg+xml image/x-icon text/cache-manifest text/css text/plain text/vcard text/vnd.rim.location.xloc text/vtt text/x-component text/x-cross-domain-policy;
+
+      # set .mjs and .wasm mime types on top of the stock mime.types
+      types {
+        text/javascript js mjs;
+        application/wasm wasm;
+      }
+
+      # specifying /index.php$request_uri as the directory fallback
+      # means nginx always exhibits the desired behaviour when a client
+      # requests a path that corresponds to a directory
+      index index.php index.html /index.php$request_uri;
+
+      # rule borrowed from .htaccess to handle microsoft dav clients
+      location = / {
+        if ( $http_user_agent ~ ^DavClnt ) {
+          return 302 /remote.php/webdav/$is_args$args;
+        }
+      }
+
+      location = /robots.txt {
+        allow all;
+        log_not_found off;
+        access_log off;
+      }
+
+      # relative redirects: traefik does not send x-forwarded-port, so
+      # absolute targets would carry the internal :8080 port
+      location ^~ /.well-known {
+        location = /.well-known/carddav { return 301 /remote.php/dav/; }
+        location = /.well-known/caldav  { return 301 /remote.php/dav/; }
+
+        # let nextcloud's api for /.well-known uris handle all other
+        # requests by passing them to the front-end controller
+        return 301 /index.php$request_uri;
+      }
+
+      # rules borrowed from .htaccess to hide certain paths from clients
+      # (data/ is the datadirectory: same deny as apache's .htaccess)
+      location ~ ^/(?:build|tests|config|lib|3rdparty|templates|data)(?:$|/)  { return 404; }
+      location ~ ^/(?:\.|autotest|occ|issue|indie|db_|console)              { return 404; }
+
+      # ensure this block, which passes php files to the php process, is
+      # above the blocks which handle static assets: prepending
+      # /index.php otherwise loops into a 500
+      location ~ \.php(?:$|/) {
+        # required for legacy support
+        rewrite ^/(?!index|remote|public|cron|core\/ajax\/update|status|ocs\/v[12]|updater\/.+|ocs-provider\/.+|.+\/richdocumentscode(_arm64)?\/proxy) /index.php$request_uri;
+
+        fastcgi_split_path_info ^(.+?\.php)(/.*)$;
+        set $path_info $fastcgi_path_info;
+
+        try_files $fastcgi_script_name =404;
+
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_param PATH_INFO $path_info;
+        fastcgi_param HTTPS on;
+
+        fastcgi_param front_controller_active true;  # enable pretty urls
+        fastcgi_pass 127.0.0.1:9000;
+
+        fastcgi_intercept_errors on;
+        fastcgi_request_buffering on;
+        fastcgi_max_temp_file_size 0;
+      }
+
+      location ~ \.(?:css|js|mjs|svg|gif|ico|jpg|png|webp|wasm|tflite|map|ogg|flac)$ {
+        try_files $uri /index.php$request_uri;
+        expires 6M;         # cache-control policy borrowed from .htaccess
+        access_log off;
+      }
+
+      location ~ \.(otf|woff2?)$ {
+        try_files $uri /index.php$request_uri;
+        expires 7d;         # cache-control policy borrowed from .htaccess
+        access_log off;
+      }
+
+      # rule borrowed from .htaccess
+      location /remote {
+        return 301 /remote.php$request_uri;
+      }
+
+      location / {
+        try_files $uri $uri/ /index.php$request_uri;
+      }
+    }
