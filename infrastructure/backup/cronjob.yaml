@@ -19,6 +19,8 @@ spec:
           labels:
             app: backup
         spec:
+          # fixed so restic finds a parent snapshot and runs incrementally
+          hostname: backup
           restartPolicy: OnFailure
           securityContext:
             seccompProfile:
@@ -122,8 +124,8 @@ spec:
                     --exclude=/data/jellyfin/.cache \
                     --exclude=/data/unifictl/config/data/db \
                     --exclude=/data/unifictl/config/logs
-                  # by default, restic groups retention by host, and every run
-                  # gets a new random pod hostname, so group by backup path instead
+                  # group by paths, not host: legacy snapshots predate the
+                  # fixed pod hostname and would fragment host groups
                   /usr/bin/restic forget \
                     --group-by paths \
                     --keep-daily 7 --keep-weekly 4 --keep-monthly 3 \
