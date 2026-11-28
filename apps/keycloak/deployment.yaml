@@ -58,6 +58,8 @@ spec:
         - name: keycloak
           image: git.khazadum.net/ruben/keycloak-khazadum:latest@sha256:e2ea4a463fe07344e8e02aaf917f8b9b38a04f441a5728fae8105d32a544ebb1
           securityContext:
+            runAsUser: 1000
+            runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
