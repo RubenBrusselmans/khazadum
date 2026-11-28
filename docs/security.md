@@ -55,7 +55,11 @@ securityContext: `allowPrivilegeEscalation: false`,
 `runAsUser`) is declared only where the image already runs as that uid
 *and* its data dirs are that uid's: postgres in keycloak (999),
 mariadb/redis (999), woodpecker (1000), awx-ee (1000), renovate
-(12021), matrix-receiver (65532).
+(12021), matrix-receiver (65532), and the de-rooted app containers
+openwebui, homepage, wiki-js and keycloak (1000; host dirs chowned to
+1000 where they exist). openwebui additionally needs `WEBUI_SECRET_KEY`
+set (SOPS secret) — its start.sh otherwise writes a secret file into
+the root-owned image workdir and dies as uid 1000.
 
 Several images run as root *and* exercise root capabilities in their
 entrypoint, so they carry no container securityContext at all — dropped
@@ -69,24 +73,19 @@ capabilities break them at runtime:
   CAP_SETGID. mariadb, redis and db-dump keep their hardening.
 - wiki-js postgres: its PGDATA subdir on the host is not 999-accessible
   (unlike keycloak's, which the root entrypoint had chowned), so the
-  root entrypoint must manage ownership; the wiki container keeps its
-  hardening.
-- homepage: the image copies a skeleton config into /app/config on
-  start, which a caps-stripped root cannot write (EACCES without
-  CAP_DAC_OVERRIDE).
+  root entrypoint must manage ownership.
+
 - hermes: s6-overlay image like forgejo; its fix-attrs service needs
   root capabilities and s6 tears the service tree down without them.
-- openwebui: runs as root but its data dir is not writable by a
-  caps-stripped root (sqlite cannot open its database file).
 
 - backup's restic container: it scans /data/crypt wholesale, and a
   caps-stripped root cannot read host files with restrictive
   permissions (silent skips, not failures). The seed-config and
   rclone containers keep their hardening.
 
-keycloak's app container runs as root and tolerates dropped
-capabilities; de-rooting the root-runtime apps is on the
-[roadmap](roadmap.md).
+De-rooting the remaining root-runtime apps (forgejo, nextcloud, the
+wiki-js postgres sidecar, hermes) is tracked on the
+[roadmap](roadmap.md); backup's restic is a decision item there.
 
 Namespace PSA labels mirror this: `enforce: restricted` on ansible,
 cert-manager and renovate; explicit `enforce: privileged` on the

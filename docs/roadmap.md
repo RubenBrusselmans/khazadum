@@ -5,29 +5,16 @@ how much cluster improvement they buy per hour of work. Items are removed
 once they are done, so everything here is still open. New findings get
 added at the bottom; the numbering only changes when an item is removed.
 
-## 1. De-root the uid-switchable containers
-
-openwebui, homepage, the keycloak app container and the wiki-js app
-container run as root only because their images declare no non-root
-USER; the two with hostPath data need their dirs chowned, the two
-without can try a uid switch directly. Recipe per app: chown the host
-dir (`/data/crypt/ai/openwebui`, `/data/crypt/homepage/config`) to uid
-1000 on the node where one exists, set `runAsUser: 1000` +
-`runAsNonRoot: true`, keep the caps-drop, watch the rollout. The
-keycloak app container writes no hostPath at all — if the CI image
-refuses uid 1000, rebuild it non-root (change lives in the keycloak
-build, see [keycloak.md](keycloak.md)). The wiki-js app container
-keeps all state in postgres, same direct-uid try.
-
-## 2. Run the wiki-js postgres as 999
+## 1. Run the wiki-js postgres as 999
 
 Keycloak's postgres runs as 999 and works; wiki-js's failed only
 because its PGDATA subdir (`/data/crypt/wiki-js/db/wiki`) is
 root-owned. Chown it to 999:999 on the node, then restore the
 `runAsUser: 999` + `runAsNonRoot` + caps-drop block that was reverted
-on 2026-11-27. After items 1 and 2, the whole wiki-js pod is non-root.
+on 2026-11-27. After this, the whole wiki-js pod is non-root (the wiki
+app container was de-rooted on 2026-11-28).
 
-## 3. Switch forgejo to its rootless image
+## 2. Switch forgejo to its rootless image
 
 The rootful forgejo image is s6-overlay based and hardening broke it
 (2026-11-27, crash-loop). Forgejo publishes a `-rootless` variant that
@@ -36,14 +23,14 @@ for Renovate to pin), chown `/data/crypt/git` to 1000, re-add the
 caps-drop hardening. Biggest single win — the git KS is Flux's own
 source, so it deserves the fastest de-root on the cluster.
 
-## 4. Label the gundabad namespace
+## 3. Label the gundabad namespace
 
 The gundabad manifests (and its namespace) live in the external
 gundabad repo, so it was left out of the PSA labeling pass. Add the
 `pod-security.kubernetes.io/enforce` label there at the level its
 workloads pass, mirroring [security.md](security.md).
 
-## 5. Backup restic: accept root or move it off-cluster
+## 4. Backup restic: accept root or move it off-cluster
 
 restic must read every file under /data/crypt, including root-owned
 0600 files — a caps-stripped root silently skips them (found live in
@@ -52,7 +39,7 @@ option. Either document root with full caps as an accepted exception
 (like the GPU pods in [security.md](security.md)) or redesign the
 backup as a host-level systemd job outside k8s. Decide, then record it.
 
-## 6. Nextcloud de-root: research
+## 5. Nextcloud de-root: research
 
 The official image is root-orchestrated: the entrypoint chowns, creates
 lock files as root and su's down to www-data, and crond needs
@@ -61,14 +48,14 @@ entrypoint, or accepting root. Investigate what the nextcloud
 ecosystem (the `nextcloud/all-in-one` approach, community Helm charts)
 does before designing anything.
 
-## 7. Hermes de-root: research
+## 6. Hermes de-root: research
 
 The hermes-agent image is s6-overlay based with no published rootless
 variant. Options: request one upstream, build a wrapper image, or
 accept root. Low priority — single internal-facing workload, digests
 pinned, network default-deny.
 
-## 8. Migrate app data from hostPath to PVCs
+## 7. Migrate app data from hostPath to PVCs
 
 The storage-model change that lifts the hostPath blocker: PSA baseline
 forbids hostPath volumes, so the eleven `enforce: privileged`
