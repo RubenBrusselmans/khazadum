@@ -37,7 +37,7 @@
       "automerge": false
     },
     {
-      "description": "Nextcloud 34 MariaDB <= 11.8 (https://docs.nextcloud.com/server/stable/admin_manual/installation/system_requirements.html).",
+      "description": "Nextcloud 35 MariaDB (matrix allows 10.11/11.4/11.8/12.3; staying on the 11.x line) https://docs.nextcloud.com/server/stable/admin_manual/installation/system_requirements.html.",
       "matchPackageNames": ["docker.io/library/mariadb"],
       "allowedVersions": "/^11\\./"
     },
