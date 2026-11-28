@@ -91,9 +91,10 @@ dropped on 2026-11-28: the same privilege model, at the cost of the
 in-cluster alerting and restore workflow. The seed-config and rclone
 containers keep their full hardening.
 
-De-rooting the remaining root-runtime apps (nextcloud, hermes) is
-tracked on the [roadmap](roadmap.md); backup's restic is a decision
-item there.
+Nextcloud de-rooting is researched and designed in
+[nextcloud-deroot.md](nextcloud-deroot.md) (2026-11-28; recommendation:
+debian fpm image + nginx sidecar, all containers non-root). Hermes and
+backup's restic remain roadmap items.
 
 Namespace PSA labels mirror this: `enforce: restricted` on ansible,
 cert-manager and renovate; explicit `enforce: privileged` on the

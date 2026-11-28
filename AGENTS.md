@@ -25,6 +25,7 @@ human readers, `docs/` holds the documentation.
 - [woodpecker-ci.md](docs/woodpecker-ci.md) — CI pipelines, the keycloak image build, registry & Renovate integration
 - [backup.md](docs/backup.md) — backups & snapshots: restic → rclone → Proton Drive, ZFS snapshots, restore
 - [nextcloud.md](docs/nextcloud.md) — Nextcloud stack: php-overrides, DB dumps, maintenance-mode gotchas
+- [nextcloud-deroot.md](docs/nextcloud-deroot.md) — Nextcloud de-root: research findings, options, migration sketch
 - [keycloak.md](docs/keycloak.md) — Keycloak: CI-built themed image, update chain
 - [jellyfin.md](docs/jellyfin.md) — Jellyfin: why `privileged: true` can't be dropped, GPU device access
 - [cert-manager.md](docs/cert-manager.md) — internal PKI: k3s-only root CA, Traefik wildcard cert, OPNsense trust import
