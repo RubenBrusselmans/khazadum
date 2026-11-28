@@ -57,10 +57,14 @@ securityContext: `allowPrivilegeEscalation: false`,
 mariadb/redis (999), woodpecker (1000), awx-ee (1000), renovate
 (12021), matrix-receiver (65532), the de-rooted app containers
 openwebui, homepage, wiki-js and keycloak (1000; host dirs chowned to
-1000 where they exist), and the wiki-js postgres sidecar (70 — the
-alpine image's postgres user; the 2026-11-27 failure was
-`runAsUser: 999`, wrong for alpine, not a data-dir ownership problem).
-openwebui additionally needs `WEBUI_SECRET_KEY`
+1000 where they exist), the wiki-js postgres sidecar (70 — the alpine
+image's postgres user; the 2026-11-27 failure was `runAsUser: 999`,
+wrong for alpine, not a data-dir ownership problem), and forgejo
+(1000, the `-rootless` image; the data tree was restructured to the
+documented `/var/lib/gitea` layout — gitconfig and global hooks live
+under `<APP_DATA_PATH>/home`, the SSH subsystem is disabled entirely
+via `DISABLE_SSH=true`). openwebui additionally needs
+`WEBUI_SECRET_KEY`
 set (SOPS secret) — its start.sh otherwise writes a secret file into
 the root-owned image workdir and dies as uid 1000.
 
@@ -68,9 +72,6 @@ Several images run as root *and* exercise root capabilities in their
 entrypoint, so they carry no container securityContext at all — dropped
 capabilities break them at runtime:
 
-- forgejo: s6-overlay supervision must run as root with full caps to
-  drop to the git user (hardened 2026-11-27, crash-looped: s6-svscan
-  could not open its lock as non-root).
 - nextcloud app and cron containers: the entrypoint creates lock files
   in www-data-owned dirs and su's down to www-data; crond needs
   CAP_SETGID. mariadb, redis and db-dump keep their hardening.
@@ -83,9 +84,9 @@ capabilities break them at runtime:
   permissions (silent skips, not failures). The seed-config and
   rclone containers keep their hardening.
 
-De-rooting the remaining root-runtime apps (forgejo, nextcloud,
-hermes) is tracked on the [roadmap](roadmap.md); backup's restic is a
-decision item there.
+De-rooting the remaining root-runtime apps (nextcloud, hermes) is
+tracked on the [roadmap](roadmap.md); backup's restic is a decision
+item there.
 
 Namespace PSA labels mirror this: `enforce: restricted` on ansible,
 cert-manager and renovate; explicit `enforce: privileged` on the
